@@ -11,7 +11,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = SMPD
 TEMPLATE = app
 
-INCLUDEPATH += D:\boost_1_59_0\
+INCLUDEPATH += $$MY_EXTERNAL_INCLUDES
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked as deprecated (the exact warnings
