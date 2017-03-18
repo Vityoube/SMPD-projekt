@@ -21,6 +21,7 @@ public:
     std::string getClassName() const;
     size_t getFeaturesNumber() const;
     const std::vector<float> &getFeatures() const;
+    bool operator == (const Object& otherObject) const;
 };
 
 

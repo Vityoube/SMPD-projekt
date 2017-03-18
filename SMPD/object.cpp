@@ -15,5 +15,10 @@
         return features;
     }
 
+    bool Object::operator ==(const Object& otherObject) const
+    {
+          return (this->getFeatures()==otherObject.getFeatures());
+    }
+
 
 

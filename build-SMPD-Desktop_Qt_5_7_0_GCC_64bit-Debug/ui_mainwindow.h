@@ -17,9 +17,9 @@
 #include <QtWidgets/QGraphicsView>
 #include <QtWidgets/QHeaderView>
 #include <QtWidgets/QLabel>
+#include <QtWidgets/QLineEdit>
 #include <QtWidgets/QMainWindow>
 #include <QtWidgets/QMenuBar>
-#include <QtWidgets/QPlainTextEdit>
 #include <QtWidgets/QPushButton>
 #include <QtWidgets/QRadioButton>
 #include <QtWidgets/QStatusBar>
@@ -56,10 +56,10 @@ public:
     QPushButton *CpushButtonTrain;
     QLabel *ClabelClassifiers;
     QComboBox *CcomboBoxClassifiers;
-    QPlainTextEdit *CplainTextEditTrainingPart;
     QPushButton *CpushButtonExecute;
     QLabel *ClabelTraningPart;
     QTextBrowser *CtextBrowser;
+    QLineEdit *CTrainPartLineEdit;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -139,9 +139,6 @@ public:
         CcomboBoxClassifiers = new QComboBox(tabC);
         CcomboBoxClassifiers->setObjectName(QStringLiteral("CcomboBoxClassifiers"));
         CcomboBoxClassifiers->setGeometry(QRect(210, 10, 69, 31));
-        CplainTextEditTrainingPart = new QPlainTextEdit(tabC);
-        CplainTextEditTrainingPart->setObjectName(QStringLiteral("CplainTextEditTrainingPart"));
-        CplainTextEditTrainingPart->setGeometry(QRect(380, 60, 71, 31));
         CpushButtonExecute = new QPushButton(tabC);
         CpushButtonExecute->setObjectName(QStringLiteral("CpushButtonExecute"));
         CpushButtonExecute->setGeometry(QRect(540, 10, 75, 31));
@@ -151,11 +148,14 @@ public:
         CtextBrowser = new QTextBrowser(tabC);
         CtextBrowser->setObjectName(QStringLiteral("CtextBrowser"));
         CtextBrowser->setGeometry(QRect(700, 10, 256, 192));
+        CTrainPartLineEdit = new QLineEdit(tabC);
+        CTrainPartLineEdit->setObjectName(QStringLiteral("CTrainPartLineEdit"));
+        CTrainPartLineEdit->setGeometry(QRect(390, 70, 71, 22));
         tabWidget->addTab(tabC, QString());
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QStringLiteral("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 991, 21));
+        menuBar->setGeometry(QRect(0, 0, 991, 19));
         MainWindow->setMenuBar(menuBar);
         mainToolBar = new QToolBar(MainWindow);
         mainToolBar->setObjectName(QStringLiteral("mainToolBar"));

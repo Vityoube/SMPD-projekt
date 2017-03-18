@@ -14,6 +14,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    QDoubleValidator* validator=new QDoubleValidator(0.00127551,0.99872449,10,ui->CTrainPartLineEdit);
+    validator->setNotation(QDoubleValidator::StandardNotation);
     FSupdateButtonState();
 }
 
@@ -120,7 +122,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 void MainWindow::on_FSpushButtonSaveFile_clicked()
 {
     QString fileName = QFileDialog::getSaveFileName(this,
-    tr("Open TextFile"), "D:\\Users\\Krzysiu\\Documents\\Visual Studio 2015\\Projects\\SMPD\\SMPD\\Debug\\", tr("Texts Files (*.txt)"));
+    tr("Open TextFile"), "maple_oak_results.txt", tr("Texts Files (*.txt)"));
 
         QMessageBox::information(this, "My File", fileName);
         database.save(fileName.toStdString());
@@ -143,6 +145,23 @@ void MainWindow::on_CpushButtonSaveFile_clicked()
 void MainWindow::on_CpushButtonTrain_clicked()
 {
 
+    if (ui->CTrainPartLineEdit->text().isEmpty()){
+        QMessageBox errorMessage;
+        errorMessage.setText("Please enter training part percentage!");
+        errorMessage.exec();
+    }
+    else if(database.trainObjects(ui->CTrainPartLineEdit->text().toDouble()/100)){
+        ui->CtextBrowser->clear();
+        ui->CtextBrowser->append("Training part: " + QString::number(database.getNoTrainingObjects()));
+        ui->CtextBrowser->append("Test part: " + QString::number(database.getNoTestObjects()));
+    } else {
+        QMessageBox errorMessage;
+        if (database.getObjects().empty())
+            errorMessage.setText("Objects database is empty!");
+        else
+            errorMessage.setText("Too much objects for training part!");
+        errorMessage.exec();
+    }
 }
 
 void MainWindow::on_CpushButtonExecute_clicked()

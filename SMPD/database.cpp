@@ -2,6 +2,16 @@
 #include <fstream>
 #include <QDebug>
 
+unsigned int Database::getNoTrainingObjects() const
+{
+    return noTrainingObjects;
+}
+
+unsigned int Database::getNoTestObjects() const
+{
+    return noTestObjects;
+}
+
 bool Database::addObject(const Object &object)
 {
     if (noFeatures == 0)
@@ -138,6 +148,29 @@ void Database::save(const std::string &fileName)
     file.close();
 }
 
+bool Database::trainObjects(double trainingPartPercent)
+{
+    if (ceil(objects.size()*trainingPartPercent)<objects.size()){
+        noTrainingObjects=objects.size()*trainingPartPercent;
+        while(trainingObjects.size()<noTrainingObjects){
+            unsigned int currentObjectId=rand()%noObjects;
+            if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),currentObjectId)!=trainObjectsIds.end())
+                continue;
+            trainingObjects.push_back(objects.at(currentObjectId));
+            trainObjectsIds.push_back(currentObjectId);
+        }
+        noTestObjects=objects.size()-noTrainingObjects;
+        for (const Object object : objects){
+            if (std::find(trainingObjects.begin(),trainingObjects.end(),object)!=trainingObjects.end())
+                continue;
+            testObjects.push_back(object);
+        }
+        return true;
+    }
+    return false;
+
+}
+
 void Database::clear()
 {
     objects.clear();
@@ -168,6 +201,8 @@ unsigned int  Database::getNoFeatures()
 {
 	return noFeatures;
 }
+
+
 
 
 
