@@ -194,6 +194,9 @@
       </property>
      </widget>
      <widget class="QPushButton" name="CpushButtonSaveFile">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -230,6 +233,9 @@
       </property>
      </widget>
      <widget class="QPushButton" name="CpushButtonTrain">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>380</x>
@@ -260,12 +266,15 @@
        <rect>
         <x>210</x>
         <y>10</y>
-        <width>69</width>
+        <width>151</width>
         <height>31</height>
        </rect>
       </property>
      </widget>
      <widget class="QPushButton" name="CpushButtonExecute">
+      <property name="enabled">
+       <bool>false</bool>
+      </property>
       <property name="geometry">
        <rect>
         <x>540</x>

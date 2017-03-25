@@ -32,7 +32,8 @@ private:
     void FSupdateButtonState(void);
     void FSsetButtonState(bool state);
 
-
+    void CUpdateButtonState(void);
+    void  CsetButtonState(bool state);
 
 private slots:
     void on_FSpushButtonOpenFile_clicked();
@@ -57,6 +58,7 @@ private:
 
 private:
      Database database;
+     QString fileFolder="";
 };
 
 #endif // MAINWINDOW_H

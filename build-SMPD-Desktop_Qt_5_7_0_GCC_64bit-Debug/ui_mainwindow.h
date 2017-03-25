@@ -123,6 +123,7 @@ public:
         CpushButtonOpenFile->setGeometry(QRect(10, 10, 75, 31));
         CpushButtonSaveFile = new QPushButton(tabC);
         CpushButtonSaveFile->setObjectName(QStringLiteral("CpushButtonSaveFile"));
+        CpushButtonSaveFile->setEnabled(false);
         CpushButtonSaveFile->setGeometry(QRect(10, 60, 75, 31));
         CcomboBoxK = new QComboBox(tabC);
         CcomboBoxK->setObjectName(QStringLiteral("CcomboBoxK"));
@@ -132,15 +133,17 @@ public:
         ClabelK->setGeometry(QRect(190, 70, 20, 31));
         CpushButtonTrain = new QPushButton(tabC);
         CpushButtonTrain->setObjectName(QStringLiteral("CpushButtonTrain"));
+        CpushButtonTrain->setEnabled(false);
         CpushButtonTrain->setGeometry(QRect(380, 10, 75, 31));
         ClabelClassifiers = new QLabel(tabC);
         ClabelClassifiers->setObjectName(QStringLiteral("ClabelClassifiers"));
         ClabelClassifiers->setGeometry(QRect(150, 10, 71, 31));
         CcomboBoxClassifiers = new QComboBox(tabC);
         CcomboBoxClassifiers->setObjectName(QStringLiteral("CcomboBoxClassifiers"));
-        CcomboBoxClassifiers->setGeometry(QRect(210, 10, 69, 31));
+        CcomboBoxClassifiers->setGeometry(QRect(210, 10, 151, 31));
         CpushButtonExecute = new QPushButton(tabC);
         CpushButtonExecute->setObjectName(QStringLiteral("CpushButtonExecute"));
+        CpushButtonExecute->setEnabled(false);
         CpushButtonExecute->setGeometry(QRect(540, 10, 75, 31));
         ClabelTraningPart = new QLabel(tabC);
         ClabelTraningPart->setObjectName(QStringLiteral("ClabelTraningPart"));

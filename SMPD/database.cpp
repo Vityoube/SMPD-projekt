@@ -12,6 +12,18 @@ unsigned int Database::getNoTestObjects() const
     return noTestObjects;
 }
 
+void Database::clearObjects()
+{
+    objects.clear();
+    trainingObjects.clear();
+    testObjects.clear();
+    noFeatures=0;
+    noObjects=0;
+    noTestObjects=0;
+    noTrainingObjects=0;
+    featuresIDs.clear();
+}
+
 bool Database::addObject(const Object &object)
 {
     if (noFeatures == 0)

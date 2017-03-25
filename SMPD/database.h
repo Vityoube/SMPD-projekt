@@ -50,6 +50,8 @@ public:
 
     unsigned int getNoTrainingObjects() const;
     unsigned int getNoTestObjects() const;
+
+    void clearObjects();
 };
 
 

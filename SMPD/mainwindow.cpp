@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     QDoubleValidator* validator=new QDoubleValidator(0.00127551,0.99872449,10,ui->CTrainPartLineEdit);
     validator->setNotation(QDoubleValidator::StandardNotation);
+
     FSupdateButtonState();
 }
 
@@ -57,10 +58,24 @@ void MainWindow::FSsetButtonState(bool state)
    ui->FSradioButtonSFS->setEnabled(state);
 }
 
+void MainWindow::CUpdateButtonState()
+{
+    if (database.getNoObjects()==0)
+        CsetButtonState(false);
+    else
+        CsetButtonState(true);
+}
+
+void MainWindow::CsetButtonState(bool state)
+{
+    ui->CpushButtonTrain->setEnabled(state);
+    ui->CpushButtonSaveFile->setEnabled(state);
+}
+
 void MainWindow::on_FSpushButtonOpenFile_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Open TextFile"), "", tr("Texts Files (*.txt)"));
+        tr("Open TextFile"), fileFolder, tr("Texts Files (*.txt)"));
 
     if ( !database.load(fileName.toStdString()) )
         QMessageBox::warning(this, "Warning", "File corrupted !!!");
@@ -130,10 +145,32 @@ void MainWindow::on_FSpushButtonSaveFile_clicked()
 
 void MainWindow::on_PpushButtonSelectFolder_clicked()
 {
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+                                                 "",
+                                                 QFileDialog::ShowDirsOnly
+                                                 | QFileDialog::DontResolveSymlinks);
+    fileFolder=dir;
 }
 
 void MainWindow::on_CpushButtonOpenFile_clicked()
 {
+    database.clearObjects();
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open TextFile"), fileFolder, tr("Texts Files (*.txt)"));
+
+    if ( !database.load(fileName.toStdString()) )
+        QMessageBox::warning(this, "Warning", "File corrupted !!!");
+    else
+        QMessageBox::information(this, fileName, "File loaded !!!");
+
+    ui->CtextBrowser->append("noClass: " +  QString::number(database.getNoClass()));
+    ui->CtextBrowser->append("noObjects: "  +  QString::number(database.getNoObjects()));
+    ui->CtextBrowser->append("noFeatures: "  +  QString::number(database.getNoFeatures()));
+    ui->CpushButtonTrain->setEnabled(true);
+    ui->CpushButtonSaveFile->setEnabled(true);
+    ui->CpushButtonExecute->setEnabled(false);
+    ui->CcomboBoxClassifiers->clear();
+    ui->CcomboBoxK->clear();
 
 }
 
@@ -154,6 +191,9 @@ void MainWindow::on_CpushButtonTrain_clicked()
         ui->CtextBrowser->clear();
         ui->CtextBrowser->append("Training part: " + QString::number(database.getNoTrainingObjects()));
         ui->CtextBrowser->append("Test part: " + QString::number(database.getNoTestObjects()));
+        ui->CcomboBoxClassifiers->addItem("Nearest Neighbor (NN)");
+        ui->CcomboBoxClassifiers->addItem("Nearest Mean (NM)");
+        ui->CpushButtonExecute->setEnabled(true);
     } else {
         QMessageBox errorMessage;
         if (database.getObjects().empty())
