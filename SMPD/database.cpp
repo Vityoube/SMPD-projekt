@@ -24,6 +24,20 @@ void Database::clearObjects()
     featuresIDs.clear();
 }
 
+unsigned int Database::getK() const
+{
+    return k;
+}
+
+void Database::setK(unsigned int value)
+{
+    k = value;
+}
+
+Database::Database() : noClass(0), noObjects(0), noFeatures(0)
+{
+}
+
 bool Database::addObject(const Object &object)
 {
     if (noFeatures == 0)
@@ -183,6 +197,57 @@ bool Database::trainObjects(double trainingPartPercent)
 
 }
 
+double Database::classifyNN(int k)
+{
+    std::vector<Object> nearestNeighborsForTestObject;
+    std::vector<std::string> nearestNeighborsClassNamesForTestObjects;
+    double probability=0.0;
+    for (Object testObject : testObjects){
+        float minDistance=99999.9f;
+        Object currentNearestNeighbor;
+        for (int i=0;i<k;i++){
+            for (Object trainingObject : trainingObjects){
+                float distanceToTrainingObject=0.0f;
+                for (int j=0;j<trainingObject.getFeaturesNumber();j++){
+                    distanceToTrainingObject+=(trainingObject.getFeaturesMutable().at(j)-testObject.getFeaturesMutable().at(j))*
+                            (trainingObject.getFeaturesMutable().at(j)-testObject.getFeaturesMutable().at(j));
+                }
+                distanceToTrainingObject=sqrt(distanceToTrainingObject);
+                if (std::find(nearestNeighborsForTestObject.begin(),nearestNeighborsForTestObject.end(),trainingObject)!=nearestNeighborsForTestObject.end())
+                    continue;
+                if (minDistance>=distanceToTrainingObject){
+                    minDistance=distanceToTrainingObject;
+                    currentNearestNeighbor=trainingObject;
+                }
+            }
+            nearestNeighborsForTestObject.push_back(currentNearestNeighbor);
+        }
+        int nearestNeighborsFromClassAForTestObjectCount=0;
+        int nearestNeighborsFromClassBForTestObjectCount=0;
+        for (Object neighborForTestObject: nearestNeighborsForTestObject){
+            if (neighborForTestObject.getClassNameMutable().find("Acer")!=std::string::npos)
+                nearestNeighborsFromClassAForTestObjectCount++;
+            else if (neighborForTestObject.getClassNameMutable().find("Quercus")!=std::string::npos)
+                nearestNeighborsFromClassBForTestObjectCount++;
+        }
+        if (nearestNeighborsFromClassAForTestObjectCount>nearestNeighborsFromClassBForTestObjectCount)
+            nearestNeighborsClassNamesForTestObjects.push_back("Acer");
+        else if (nearestNeighborsFromClassAForTestObjectCount<nearestNeighborsFromClassBForTestObjectCount)
+            nearestNeighborsClassNamesForTestObjects.push_back("Quercus");
+        nearestNeighborsForTestObject.clear();
+
+    }
+    int correctObjectsCount=0;
+    for (int i=0;i<noTestObjects;i++){
+        if (testObjects.at(i).getClassNameMutable().compare(nearestNeighborsClassNamesForTestObjects.at(i))==0)
+            correctObjectsCount++;
+    }
+    probability=(double)correctObjectsCount/(double)noTestObjects;
+    return probability*100;
+}
+
+
+
 void Database::clear()
 {
     objects.clear();
@@ -197,6 +262,30 @@ void Database::clear()
 const std::vector<Object> &Database::getObjects() const
 {
     return objects;
+}
+
+const std::map<std::__cxx11::string, int> &Database::getClassCounters() const { return classCounters; }
+
+const std::vector<std::__cxx11::string> &Database::getClassNames() const { return classNamesVector; }
+
+const std::vector<Object> &Database::getTrainingObjects() const
+{
+    return trainingObjects;
+}
+
+const std::vector<Object> &Database::getTestObjects() const
+{
+    return testObjects;
+}
+
+Object Database::getTrainingObjectByIndex(unsigned int index)
+{
+    return trainingObjects.at(index);
+}
+
+Object Database::getTestObjectByIndex(unsigned int index)
+{
+    return testObjects.at(index);
 }
 
 unsigned int Database::getNoClass()

@@ -10,6 +10,16 @@
         return features.size();
     }
 
+    std::__cxx11::string Object::getClassNameMutable()
+    {
+        return className;
+    }
+
+    std::vector<float> Object::getFeaturesMutable()
+    {
+        return features;
+    }
+
     const std::vector<float> &Object::getFeatures() const
     {
         return features;

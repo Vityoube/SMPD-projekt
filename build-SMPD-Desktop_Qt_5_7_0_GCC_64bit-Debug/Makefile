@@ -1597,12 +1597,11 @@ mainwindow.o: ../SMPD/mainwindow.cpp ../SMPD/mainwindow.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qabstractitemview.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QLabel \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qlabel.h \
+		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QLineEdit \
+		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qlineedit.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QMenuBar \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qmenubar.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qmenu.h \
-		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QPlainTextEdit \
-		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qplaintextedit.h \
-		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qtextedit.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QPushButton \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qpushbutton.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QRadioButton \
@@ -1612,6 +1611,7 @@ mainwindow.o: ../SMPD/mainwindow.cpp ../SMPD/mainwindow.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QTabWidget \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QTextBrowser \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qtextbrowser.h \
+		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qtextedit.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QToolBar \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qtoolbar.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QWidget \

@@ -25,24 +25,30 @@ private:
     unsigned int noFeatures;
     unsigned int noTrainingObjects;
     unsigned int noTestObjects;
+    unsigned int k;
+
+
 
 public:
 
-    Database() : noClass(0), noObjects(0), noFeatures(0)
-    {
-    }
+    Database();
 
     bool addObject(const Object &object);
     void clear();
     bool load(const std::string &fileName);
     void save(const std::string &fileName);
     bool trainObjects(double trainingPartPercent);
+    double classifyNN(int k);
+    double classifyNM(int k);
 
     const std::vector<Object> &getObjects() const;
-	const std::map<std::string, int>& getClassCounters() const { return classCounters; }
-	const std::vector<std::string>& getClassNames() const { return classNamesVector; }
+    const std::map<std::string, int>& getClassCounters() const;
+    const std::vector<std::string>& getClassNames() const;
     const std::vector<Object> &getTrainingObjects() const;
     const std::vector<Object> &getTestObjects() const;
+
+    Object getTrainingObjectByIndex(unsigned int index);
+    Object getTestObjectByIndex(unsigned int index);
 
     unsigned int getNoClass();
     unsigned int getNoObjects();
@@ -52,6 +58,8 @@ public:
     unsigned int getNoTestObjects() const;
 
     void clearObjects();
+    unsigned int getK() const;
+    void setK(unsigned int value);
 };
 
 

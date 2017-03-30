@@ -189,11 +189,28 @@ void MainWindow::on_CpushButtonTrain_clicked()
     }
     else if(database.trainObjects(ui->CTrainPartLineEdit->text().toDouble()/100)){
         ui->CtextBrowser->clear();
+        ui->CcomboBoxK->clear();
         ui->CtextBrowser->append("Training part: " + QString::number(database.getNoTrainingObjects()));
         ui->CtextBrowser->append("Test part: " + QString::number(database.getNoTestObjects()));
         ui->CcomboBoxClassifiers->addItem("Nearest Neighbor (NN)");
         ui->CcomboBoxClassifiers->addItem("Nearest Mean (NM)");
         ui->CpushButtonExecute->setEnabled(true);
+        if (database.getNoTrainingObjects()<=database.getNoTestObjects()){
+            if (database.getNoTrainingObjects()%2==0)
+                database.setK(database.getNoTrainingObjects()-1);
+            else
+                database.setK(database.getNoTrainingObjects());
+        } else if (database.getNoTrainingObjects()>database.getNoTestObjects()){
+            if (database.getNoTestObjects()%2==0)
+                database.setK(database.getNoTestObjects()-1);
+            else
+                database.setK(database.getNoTestObjects());
+        }
+        int k=database.getK();
+        for (int i=0;i<=k;i+=2){
+            ui->CcomboBoxK->addItem(QString::number(i+1));
+        }
+
     } else {
         QMessageBox errorMessage;
         if (database.getObjects().empty())
@@ -206,5 +223,20 @@ void MainWindow::on_CpushButtonTrain_clicked()
 
 void MainWindow::on_CpushButtonExecute_clicked()
 {
+    if (ui->CcomboBoxClassifiers->currentText().compare("Nearest Neighbor (NN)")==0){
+        double probability=database.classifyNN(ui->CcomboBoxK->currentText().toInt());
+        ui->CtextBrowser->setFocus();
+        QTextCursor cursor=ui->CtextBrowser->textCursor();
+        ui->CtextBrowser->moveCursor(QTextCursor::End,QTextCursor::MoveAnchor);
+        ui->CtextBrowser->moveCursor(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+        ui->CtextBrowser->moveCursor(QTextCursor::End, QTextCursor::KeepAnchor);
+        if (ui->CtextBrowser->textCursor().selectedText().contains("Probability")){
+            ui->CtextBrowser->textCursor().removeSelectedText();
+            ui->CtextBrowser->textCursor().deletePreviousChar();
+        }
+        ui->CtextBrowser->setTextCursor(cursor);
+        ui->CtextBrowser->append("Probability: "+QString::number(probability)+"%");
+
+    }
 
 }
