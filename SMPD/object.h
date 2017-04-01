@@ -24,7 +24,7 @@ public:
 
     std::string getClassName() const;
     size_t getFeaturesNumber() const;
-    float getFeature(int index);
+    float getFeature(int index) const;
     std::string getClassNameMutable();
     std::vector<float> getFeaturesMutable();
     const std::vector<float> &getFeatures() const;

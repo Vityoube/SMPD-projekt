@@ -224,8 +224,8 @@ void MainWindow::on_CpushButtonTrain_clicked()
 void MainWindow::on_CpushButtonExecute_clicked()
 {
     if (ui->CcomboBoxClassifiers->currentText().toStdString().compare("Nearest Neighbor (NN)")==0){
-        int k=ui->CcomboBoxK->currentText().toInt();
-        double probability=database.classifyNN(k);
+        database.setK(ui->CcomboBoxK->currentText().toInt());
+        double probability=database.classifyNN();
         ui->CtextBrowser->setFocus();
         QTextCursor cursor=ui->CtextBrowser->textCursor();
         ui->CtextBrowser->moveCursor(QTextCursor::End,QTextCursor::MoveAnchor);
@@ -239,8 +239,8 @@ void MainWindow::on_CpushButtonExecute_clicked()
         ui->CtextBrowser->append("Probability: "+QString::number(probability)+"%");
     }
     if (ui->CcomboBoxClassifiers->currentText().toStdString().compare("Nearest Mean (NM)")==0){
-        int k=ui->CcomboBoxK->currentText().toInt();
-        double probability=database.classifyNM(k);
+        database.setK(ui->CcomboBoxK->currentText().toInt());
+        double probability=database.classifyNM();
         ui->CtextBrowser->setFocus();
         QTextCursor cursor=ui->CtextBrowser->textCursor();
         ui->CtextBrowser->moveCursor(QTextCursor::End,QTextCursor::MoveAnchor);

@@ -6,6 +6,7 @@
 #include <map>
 #include <math.h>
 #include <algorithm>
+#include <iostream>
 
 #include "object.h"
 
@@ -43,8 +44,8 @@ public:
     bool load(const std::string &fileName);
     void save(const std::string &fileName);
     bool trainObjects(double trainingPartPercent);
-    double classifyNN(int k);
-    double classifyNM(int k);
+    double classifyNN();
+    double classifyNM();
 
     const std::vector<Object> &getObjects() const;
     const std::map<std::string, int>& getClassCounters() const;

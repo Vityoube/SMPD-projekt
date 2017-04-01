@@ -8,7 +8,6 @@
 #include <QtCore>
 #include <QtGui>
 #include <QMessageBox>
-#include <iostream>
 
 
 #include"database.h"

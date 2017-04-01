@@ -32,7 +32,7 @@ std::string Object::getClassName() const
         return features.size();
     }
 
-    float Object::getFeature(int index)
+    float Object::getFeature(int index) const
     {
         return features.at(index);
     }
@@ -52,9 +52,14 @@ std::string Object::getClassName() const
         return features;
     }
 
-    bool Object::operator ==(const Object& otherObject) const
-    {
-          return (this->getFeatures()==otherObject.getFeatures());
+    bool Object::operator==(const Object& otherObject) const
+    {        
+        for (int i=0;i<this->getFeaturesNumber();i++)
+            if (this->getFeature(i)!=otherObject.getFeature(i)){
+                return false;
+            }
+        if (this->classID==otherObject.classID)
+            return true;
     }
 
 
