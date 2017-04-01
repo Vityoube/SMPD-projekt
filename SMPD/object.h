@@ -19,14 +19,21 @@ public:
     }
     Object()
     {
+
     }
 
     std::string getClassName() const;
     size_t getFeaturesNumber() const;
+    float getFeature(int index);
     std::string getClassNameMutable();
     std::vector<float> getFeaturesMutable();
     const std::vector<float> &getFeatures() const;
     bool operator == (const Object& otherObject) const;
+    void setClassName(const std::string &value);
+    void setFeature(int index, float featureValue);
+    void addFeature(float featureValue);
+    bool compareName(std::string name);
+
 };
 
 

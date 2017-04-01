@@ -34,6 +34,16 @@ void Database::setK(unsigned int value)
     k = value;
 }
 
+std::map<Object, std::vector<Object> > Database::getNearestMeansForTestObjects() const
+{
+    return nearestMeansForTestObjects;
+}
+
+void Database::setNearestMeansForTestObjects(const std::map<Object, std::vector<Object> > &value)
+{
+    nearestMeansForTestObjects = value;
+}
+
 Database::Database() : noClass(0), noObjects(0), noFeatures(0)
 {
 }
@@ -176,6 +186,9 @@ void Database::save(const std::string &fileName)
 
 bool Database::trainObjects(double trainingPartPercent)
 {
+    testObjects.clear();
+    trainingObjects.clear();
+    trainObjectsIds.clear();
     if (ceil(objects.size()*trainingPartPercent)<objects.size()){
         noTrainingObjects=objects.size()*trainingPartPercent;
         while(trainingObjects.size()<noTrainingObjects){
@@ -186,7 +199,7 @@ bool Database::trainObjects(double trainingPartPercent)
             trainObjectsIds.push_back(currentObjectId);
         }
         noTestObjects=objects.size()-noTrainingObjects;
-        for (const Object object : objects){
+        for (Object object : objects){
             if (std::find(trainingObjects.begin(),trainingObjects.end(),object)!=trainingObjects.end())
                 continue;
             testObjects.push_back(object);
@@ -199,18 +212,17 @@ bool Database::trainObjects(double trainingPartPercent)
 
 double Database::classifyNN(int k)
 {
-    std::vector<Object> nearestNeighborsForTestObject;
-    std::vector<std::string> nearestNeighborsClassNamesForTestObjects;
+    nearestNeighborsClassNamesForTestObjects.clear();
     double probability=0.0;
     for (Object testObject : testObjects){
-        float minDistance=99999.9f;
-        Object currentNearestNeighbor;
+        float minDistance=99999.9f;        
         for (int i=0;i<k;i++){
             for (Object trainingObject : trainingObjects){
                 float distanceToTrainingObject=0.0f;
-                for (int j=0;j<trainingObject.getFeaturesNumber();j++){
-                    distanceToTrainingObject+=(trainingObject.getFeaturesMutable().at(j)-testObject.getFeaturesMutable().at(j))*
-                            (trainingObject.getFeaturesMutable().at(j)-testObject.getFeaturesMutable().at(j));
+                unsigned int featuresNumber=trainingObject.getFeaturesNumber();
+                for (unsigned int j=0;j<featuresNumber;j++){
+                    distanceToTrainingObject+=((trainingObject.getFeaturesMutable().at(j)-testObject.getFeaturesMutable().at(j))*
+                            (trainingObject.getFeaturesMutable().at(j)-testObject.getFeaturesMutable().at(j)));
                 }
                 distanceToTrainingObject=sqrt(distanceToTrainingObject);
                 if (std::find(nearestNeighborsForTestObject.begin(),nearestNeighborsForTestObject.end(),trainingObject)!=nearestNeighborsForTestObject.end())
@@ -225,9 +237,9 @@ double Database::classifyNN(int k)
         int nearestNeighborsFromClassAForTestObjectCount=0;
         int nearestNeighborsFromClassBForTestObjectCount=0;
         for (Object neighborForTestObject: nearestNeighborsForTestObject){
-            if (neighborForTestObject.getClassNameMutable().find("Acer")!=std::string::npos)
+            if (neighborForTestObject.getClassNameMutable().compare("Acer")==0)
                 nearestNeighborsFromClassAForTestObjectCount++;
-            else if (neighborForTestObject.getClassNameMutable().find("Quercus")!=std::string::npos)
+            else if (neighborForTestObject.getClassNameMutable().compare("Quercus")==0)
                 nearestNeighborsFromClassBForTestObjectCount++;
         }
         if (nearestNeighborsFromClassAForTestObjectCount>nearestNeighborsFromClassBForTestObjectCount)
@@ -238,11 +250,66 @@ double Database::classifyNN(int k)
 
     }
     int correctObjectsCount=0;
-    for (int i=0;i<noTestObjects;i++){
+    for (unsigned int i=0;i<nearestNeighborsClassNamesForTestObjects.size();i++){
         if (testObjects.at(i).getClassNameMutable().compare(nearestNeighborsClassNamesForTestObjects.at(i))==0)
             correctObjectsCount++;
     }
     probability=(double)correctObjectsCount/(double)noTestObjects;
+    return probability*100;
+}
+
+double Database::classifyNM(int k)
+{
+    nearestMeansClassNamesForTestObjects.clear();
+    double probability=0.0;
+    if (k==1){
+        Object classAMean;
+        Object classBMean;
+        classAMean.setClassName("Acer");
+        classBMean.setClassName("Quercus");
+        for (int i=0; i<noFeatures;i++){
+            classAMean.addFeature(0.0f);
+            classBMean.addFeature(0.0f);
+        }
+        for (int i=0; i<noFeatures;i++){
+            int classAElementsCount=0, classBElementsCount=0;
+            for (Object trainingObject : trainingObjects){
+                if (trainingObject.compareName("Acer")==0){
+                    classAMean.setFeature(i,classAMean.getFeature(i)+trainingObject.getFeature(i));
+                    classAElementsCount++;
+                } else if (trainingObject.compareName("Quercus")==0){
+                    classBMean.setFeature(i,classBMean.getFeature(i)+trainingObject.getFeature(i));
+                    classBElementsCount++;
+                }
+                classAMean.setFeature(i,classAMean.getFeature(i)/classAElementsCount);
+                classBMean.setFeature(i,classBMean.getFeature(i)/classBElementsCount);
+            }
+        }
+        for (Object testObject : testObjects){
+            float distanceToClassA=0.0f,distanceToClassB=0.0f;
+            for (int i=0; i<noFeatures;i++){
+               distanceToClassA+=(testObject.getFeature(i)-classAMean.getFeature(i))*(testObject.getFeature(i)-classAMean.getFeature(i));
+               distanceToClassB+=(testObject.getFeature(i)-classBMean.getFeature(i))*(testObject.getFeature(i)-classBMean.getFeature(i));
+            }
+            distanceToClassA=sqrt(distanceToClassA);
+            distanceToClassB=sqrt(distanceToClassB);
+//            std::vector<Object>nearestMeansForTestObject;
+            if (distanceToClassA<distanceToClassB){
+//                nearestMeansForTestObject.push_back(classAMean);
+                nearestMeansClassNamesForTestObjects.push_back(classAMean.getClassName());
+            }
+            else{
+//                nearestMeansForTestObject.push_back(classBMean);
+                nearestMeansClassNamesForTestObjects.push_back(classBMean.getClassName());
+            }
+        }
+        int correctObjectsCount=0;
+        for (int i=0;i<nearestMeansClassNamesForTestObjects.size();i++){
+            if (testObjects.at(i).compareName(nearestMeansClassNamesForTestObjects.at(i)))
+                correctObjectsCount++;
+        }
+        probability=(double)correctObjectsCount/(double)noTestObjects;
+    }
     return probability*100;
 }
 

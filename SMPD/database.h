@@ -19,6 +19,11 @@ private:
 	std::vector<std::string> classNamesVector;
     std::vector<unsigned int> featuresIDs;
     std::vector<unsigned int> trainObjectsIds;
+    std::vector<Object> nearestNeighborsForTestObject;
+    std::vector<std::string> nearestNeighborsClassNamesForTestObjects;
+    Object currentNearestNeighbor;
+    std::map<Object,std::vector<Object>> nearestMeansForTestObjects;
+    std::vector<std::string> nearestMeansClassNamesForTestObjects;
 
     unsigned int noClass;
     unsigned int noObjects;
@@ -60,6 +65,8 @@ public:
     void clearObjects();
     unsigned int getK() const;
     void setK(unsigned int value);
+    std::map<Object, std::vector<Object> > getNearestMeansForTestObjects() const;
+    void setNearestMeansForTestObjects(const std::map<Object, std::vector<Object> > &value);
 };
 
 
