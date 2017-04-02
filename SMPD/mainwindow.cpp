@@ -189,6 +189,7 @@ void MainWindow::on_CpushButtonTrain_clicked()
     }
     else if(database.trainObjects(ui->CTrainPartLineEdit->text().toDouble()/100)){
         ui->CtextBrowser->clear();
+        ui->CcomboBoxClassifiers->clear();
         ui->CcomboBoxK->clear();
         ui->CtextBrowser->append("Training part: " + QString::number(database.getNoTrainingObjects()));
         ui->CtextBrowser->append("Test part: " + QString::number(database.getNoTestObjects()));
