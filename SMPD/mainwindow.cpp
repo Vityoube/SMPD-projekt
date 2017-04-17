@@ -16,7 +16,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     QDoubleValidator* validator=new QDoubleValidator(0.00127551,0.99872449,10,ui->CTrainPartLineEdit);
     validator->setNotation(QDoubleValidator::StandardNotation);
-
     FSupdateButtonState();
 }
 
@@ -196,19 +195,19 @@ void MainWindow::on_CpushButtonTrain_clicked()
         ui->CcomboBoxClassifiers->addItem("Nearest Neighbor (NN)");
         ui->CcomboBoxClassifiers->addItem("Nearest Mean (NM)");
         ui->CpushButtonExecute->setEnabled(true);
-        if (database.getNoTrainingObjects()<=database.getNoTestObjects()){
-            if (database.getNoTrainingObjects()%2==0)
-                database.setK(database.getNoTrainingObjects()-1);
+        if (database.getClassAObjectsCount()<=database.getClassBObjectsCount()){
+            if (database.getClassAObjectsCount()%2==0)
+                database.setK(database.getClassAObjectsCount()-1);
             else
-                database.setK(database.getNoTrainingObjects());
-        } else if (database.getNoTrainingObjects()>database.getNoTestObjects()){
-            if (database.getNoTestObjects()%2==0)
-                database.setK(database.getNoTestObjects()-1);
+                database.setK(database.getClassAObjectsCount());
+        } else if (database.getClassAObjectsCount()>database.getClassBObjectsCount()){
+            if (database.getClassBObjectsCount()%2==0)
+                database.setK(database.getClassBObjectsCount()-1);
             else
-                database.setK(database.getNoTestObjects());
+                database.setK(database.getClassBObjectsCount());
         }
         int k=database.getK();
-        for (int i=0;i<=k;i+=2){
+        for (int i=0;i<=k;i++){
             ui->CcomboBoxK->addItem(QString::number(i+1));
         }
 
@@ -226,18 +225,20 @@ void MainWindow::on_CpushButtonExecute_clicked()
 {
     if (ui->CcomboBoxClassifiers->currentText().toStdString().compare("Nearest Neighbor (NN)")==0){
         database.setK(ui->CcomboBoxK->currentText().toInt());
-        double probability=database.classifyNN();
-        ui->CtextBrowser->setFocus();
-        QTextCursor cursor=ui->CtextBrowser->textCursor();
-        ui->CtextBrowser->moveCursor(QTextCursor::End,QTextCursor::MoveAnchor);
-        ui->CtextBrowser->moveCursor(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
-        ui->CtextBrowser->moveCursor(QTextCursor::End, QTextCursor::KeepAnchor);
-        if (ui->CtextBrowser->textCursor().selectedText().contains("Probability")){
-            ui->CtextBrowser->textCursor().removeSelectedText();
-            ui->CtextBrowser->textCursor().deletePreviousChar();
+        if (database.getK()%2!=0){
+            double probability=database.classifyNN();
+            ui->CtextBrowser->setFocus();
+            QTextCursor cursor=ui->CtextBrowser->textCursor();
+            ui->CtextBrowser->moveCursor(QTextCursor::End,QTextCursor::MoveAnchor);
+            ui->CtextBrowser->moveCursor(QTextCursor::StartOfLine, QTextCursor::MoveAnchor);
+            ui->CtextBrowser->moveCursor(QTextCursor::End, QTextCursor::KeepAnchor);
+            if (ui->CtextBrowser->textCursor().selectedText().contains("Probability")){
+                ui->CtextBrowser->textCursor().removeSelectedText();
+                ui->CtextBrowser->textCursor().deletePreviousChar();
+            }
+            ui->CtextBrowser->setTextCursor(cursor);
+            ui->CtextBrowser->append("Probability: "+QString::number(probability)+"%");
         }
-        ui->CtextBrowser->setTextCursor(cursor);
-        ui->CtextBrowser->append("Probability: "+QString::number(probability)+"%");
     }
     if (ui->CcomboBoxClassifiers->currentText().toStdString().compare("Nearest Mean (NM)")==0){
         database.setK(ui->CcomboBoxK->currentText().toInt());

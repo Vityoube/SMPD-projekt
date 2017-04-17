@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <list>
 #include <map>
 #include <math.h>
 #include <algorithm>
@@ -25,6 +26,17 @@ private:
     Object currentNearestNeighbor;
     std::map<Object,std::vector<Object>> nearestMeansForTestObjects;
     std::vector<std::string> nearestMeansClassNamesForTestObjects;
+
+    std::map<int,std::vector<Object>> groupsForAClass;
+    std::map<int,std::vector<Object>> groupsForBClass;
+
+    std::vector<Object> meansForAClassGroups;
+    std::vector<Object> meansForBClassGroups;
+
+    std::vector<Object> classAObjects;
+    std::vector<Object> classBObjects;
+    int classAObjectsCount;
+    int classBObjectsCount;
 
     unsigned int noClass;
     unsigned int noObjects;
@@ -68,6 +80,14 @@ public:
     void setK(unsigned int value);
     std::map<Object, std::vector<Object> > getNearestMeansForTestObjects() const;
     void setNearestMeansForTestObjects(const std::map<Object, std::vector<Object> > &value);
+    std::vector<Object> getClassAObjects() const;
+    void setClassAObjects(const std::vector<Object> &value);
+    std::vector<Object> getClassBObjects() const;
+    void setClassBObjects(const std::vector<Object> &value);
+    int getClassAObjectsCount() const;
+    void setClassAObjectsCount(int value);
+    int getClassBObjectsCount() const;
+    void setClassBObjectsCount(int value);
 };
 
 
