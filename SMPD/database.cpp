@@ -2,6 +2,7 @@
 #include <fstream>
 #include <QDebug>
 
+
 unsigned int Database::getNoTrainingObjects() const
 {
     return noTrainingObjects;
@@ -77,6 +78,11 @@ void Database::setClassAObjectsCount(int value)
 int Database::getClassBObjectsCount() const
 {
     return classBObjectsCount;
+}
+
+Object Database::getObjectByIndex(int index)
+{
+    return objects.at(index);
 }
 
 void Database::setClassBObjectsCount(int value)
@@ -168,14 +174,17 @@ bool Database::load(const std::string &fileName)
             if (pos != std::string::npos)
             {
                 std::string feature = features.substr(0, pos);
+                std::cout<<"Wartość cechy string: "<<feature<<std::endl;
                 features = features.substr(pos + 1);
                 float featureValue = std::stof(feature);
                 featuresValues.push_back(featureValue);
+                std::cout<<"Feature value: "<<featureValue<<std::endl;
             }
             else
             {
                 float featureValue = std::stof(features);
                 featuresValues.push_back(featureValue);
+                std::cout<<"Feature value: "<<featureValue<<std::endl;
                 break;
             }
         }

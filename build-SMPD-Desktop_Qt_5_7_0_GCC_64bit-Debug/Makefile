@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
+CXXFLAGS      = -pipe -g -std=gnu++1y -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 INCPATH       = -I../SMPD -I. -I../../../../Qt5.7.0/5.7/gcc_64/include -I../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets -I../../../../Qt5.7.0/5.7/gcc_64/include/QtGui -I../../../../Qt5.7.0/5.7/gcc_64/include/QtCore -I. -I. -I../../../../Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++
 QMAKE         = /home/vkalashnykov/Qt5.7.0/5.7/gcc_64/bin/qmake
 DEL_FILE      = rm -f
@@ -904,6 +904,7 @@ moc_mainwindow.cpp: ../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QMainWindow
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qmessagebox.h \
 		../SMPD/database.h \
 		../SMPD/object.h \
+		../SMPD/matrixutil.hpp \
 		../SMPD/mainwindow.h \
 		../../../../Qt5.7.0/5.7/gcc_64/bin/moc
 	/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/vkalashnykov/WEEiA_PROJEKTY/Semestr1-2stopien/SMPD/SMPD -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtGui -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtCore -I. -I/usr/include/c++/6 -I/usr/include/x86_64-linux-gnu/c++/6 -I/usr/include/c++/6/backward -I/usr/lib/gcc/x86_64-linux-gnu/6/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../SMPD/mainwindow.h -o moc_mainwindow.cpp
@@ -1244,6 +1245,7 @@ main.o: ../SMPD/main.cpp ../SMPD/mainwindow.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qmessagebox.h \
 		../SMPD/database.h \
 		../SMPD/object.h \
+		../SMPD/matrixutil.hpp \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QApplication \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qapplication.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qdesktopwidget.h
@@ -1566,6 +1568,7 @@ mainwindow.o: ../SMPD/mainwindow.cpp ../SMPD/mainwindow.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/qmessagebox.h \
 		../SMPD/database.h \
 		../SMPD/object.h \
+		../SMPD/matrixutil.hpp \
 		ui_mainwindow.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtCore/QVariant \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QAction \
@@ -1620,6 +1623,7 @@ mainwindow.o: ../SMPD/mainwindow.cpp ../SMPD/mainwindow.h \
 
 database.o: ../SMPD/database.cpp ../SMPD/database.h \
 		../SMPD/object.h \
+		../SMPD/matrixutil.hpp \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtCore/QDebug \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtCore/qdebug.h \
 		../../../../Qt5.7.0/5.7/gcc_64/include/QtCore/qalgorithms.h \

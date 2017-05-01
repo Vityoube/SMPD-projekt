@@ -8,9 +8,10 @@
 #include <math.h>
 #include <algorithm>
 #include <iostream>
+#include <boost/lexical_cast.hpp>
 
 #include "object.h"
-
+#include "matrixutil.hpp"
 class Database
 {
 private:
@@ -87,6 +88,8 @@ public:
     int getClassAObjectsCount() const;
     void setClassAObjectsCount(int value);
     int getClassBObjectsCount() const;
+
+    Object getObjectByIndex(int index);
     void setClassBObjectsCount(int value);
 };
 

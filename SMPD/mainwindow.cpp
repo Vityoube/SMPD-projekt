@@ -102,12 +102,25 @@ void MainWindow::on_FSpushButtonCompute_clicked()
             {
                 std::map<std::string, float> classAverages;
                 std::map<std::string, float> classStds;
-
-                for (auto const &ob : database.getObjects())
+                int currentObjectNumber=0;
+                std::cout<<"W bazie są "<<database.getNoObjects()<<" obiektów"<<std::endl;
+                for (int j = 0; j<(database.getNoObjects());++j)
                 {
-                    classAverages[ob.getClassName()] += ob.getFeatures()[i];
-                    classStds[ob.getClassName()] += ob.getFeatures()[i] * ob.getFeatures()[i];
+                    Object ob=database.getObjectByIndex(j);
+                    classAverages[ob.getClassName()] += (float)ob.getFeature(i);
+                    classStds[ob.getClassName()] +=  (float)ob.getFeature(i) *  (float)ob.getFeature(i);
+                    float currentClassStandartDeviation=classAverages[ob.getClassName()];
+                    float currentClassAverage=classStds[ob.getClassName()];
+                    std::cout<<"I\'m in average and standard deviation calculation. Current Object number: "<<currentObjectNumber++<<std::endl;
+                    std::cout<<"Obiekt "<<j<<" należy do klasy "<<ob.getClassName()<<std::endl;
+                    std::cout<<"Wartość cechy "<<i<<" dla obiekta "<<currentObjectNumber<<" wynosi: "<<(float)(ob.getFeature(i))<<std::endl;
+//                    std::cout<<"Średnia dla bieżacej klasy:"<<currentClassStandartDeviation<<std::endl;
+//                    std::cout<<"Odchylenie standartowe dla bieżącej klasy: "<<currentClassAverage<<std::endl;
+
                 }
+                std::cout<<"Średnia dla klasy A: "<<classAverages["Acer"]<<std::endl<<"Średnia dla klasy B: "<<classAverages["Quercus"]<<std::endl
+                        <<"Odchylenie standartowe dla klasy A: "<<classStds["Acer"]<<std::endl<<"Odchylenie standartowe dla klasy B: "<<classStds["Quercus"]
+                       <<std::endl;
 
                 std::for_each(database.getClassCounters().begin(), database.getClassCounters().end(), [&](const std::pair<std::string, int> &it)
                 {
