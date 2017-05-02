@@ -174,18 +174,18 @@ bool Database::load(const std::string &fileName)
             if (pos != std::string::npos)
             {
                 std::string feature = features.substr(0, pos);
-                std::cout<<"Feature value string: "<<feature<<std::endl;
+//                std::cout<<"Feature value string: "<<feature<<std::endl;
                 features = features.substr(pos + 1);
                 float featureValue = std::stof(feature);
                 featuresValues.push_back(featureValue);
-                std::cout<<"Feature value: "<<std::fixed<<std::setprecision(5)<<featureValue<<std::endl;
+//                std::cout<<"Feature value: "<<std::fixed<<std::setprecision(5)<<featureValue<<std::endl;
             }
             else
             {
                 float featureValue = std::stof(features);
-                std::cout<<"Feature value string: "<<features<<std::endl;
+//                std::cout<<"Feature value string: "<<features<<std::endl;
                 featuresValues.push_back(featureValue);
-                std::cout<<"Feature value: "<<std::fixed<<std::setprecision(5)<<featureValue<<std::endl;
+//                std::cout<<"Feature value: "<<std::fixed<<std::setprecision(5)<<featureValue<<std::endl;
                 break;
             }
         }

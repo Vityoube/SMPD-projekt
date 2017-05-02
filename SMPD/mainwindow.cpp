@@ -145,7 +145,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
             boost::numeric::ublas::matrix<float> sA(dimension,dimension);
             boost::numeric::ublas::matrix<float> sB(dimension,dimension);
 
-            std::vector<std::vector<int>> indexesCombiantionsVector;
+            std::vector<std::vector<int>> indexesCombinationsVector;
             std::vector<bool> areIndexesPermited(database.getNoFeatures());
             std::fill(areIndexesPermited.begin(),areIndexesPermited.begin()+dimension,true);
 
@@ -155,7 +155,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                     if (areIndexesPermited[i])
                         currentIndexes.push_back(i);
                 }
-                indexesCombiantionsVector.push_back(currentIndexes);
+                indexesCombinationsVector.push_back(currentIndexes);
             } while(std::prev_permutation(areIndexesPermited.begin(),areIndexesPermited.end()));
 
 //            int currentVector=0;
@@ -170,11 +170,35 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 //                std::cout<<std::endl;
 //                currentVector++;
 //            }
+            boost::numeric::ublas::vector<float> dispersionA(dimension);
+            boost::numeric::ublas::vector<float> dispertionB(dimension);
+            boost::numeric::ublas::vector<float> meansA(dimension);
+            boost::numeric::ublas::vector<float> meansB(dimension);
+            for (int i=0;i<indexesCombinationsVector.size();++i){
+                std::vector<int> currentFeatures=indexesCombinationsVector.at(i);
+                for (int i=0;i<dimension;++i){
+                    int currentFeature=currentFeatures.at(i);
+                    int aObjectsCount=0, bObjectsCount=0;
+                    for (Object currentObject: database.getObjects()){
+                        if (currentObject.compareName("Acer")){
+                            meansA[i]+=currentObject.getFeature(currentFeature);
+                            aObjectsCount++;
+                        } else if (currentObject.compareName("Quercus")){
+                            meansB[i]+=currentObject.getFeature(currentFeature);
+                            bObjectsCount++;
+                        }
+                    }
+                    meansA[i]/=aObjectsCount;
+                    meansB[i]/=bObjectsCount;
+//                    std::cout<<"Średnia dla cechy #"<<currentFeature<<" dla klasy A = "<<meansA[i]<<std::endl;
+//                    std::cout<<"Średnia dla cechy #"<<currentFeature<<" dla klasy B = "<<meansB[i]<<std::endl;
+                }
+
+            }
 
 
-
-          }
-     }
+        }
+    }
 }
 
 
