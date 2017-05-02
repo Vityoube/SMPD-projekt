@@ -71,6 +71,31 @@ void MainWindow::CsetButtonState(bool state)
     ui->CpushButtonSaveFile->setEnabled(state);
 }
 
+float MainWindow::matrixDeterminant(boost::numeric::ublas::matrix<float> matrix)
+{
+    boost::numeric::ublas::permutation_matrix<std::size_t> pm(matrix.size1());
+    float determinant = 1.0;
+    if (boost::numeric::ublas::lu_factorize(matrix, pm))
+        determinant=0.0;
+    else
+        for(int i=0;i<matrix.size1();++i){
+            determinant*=matrix(i,i);
+         determinant*=matrixDeterminantSign(pm);
+    }
+    return determinant;
+}
+
+int MainWindow::matrixDeterminantSign(const boost::numeric::ublas::permutation_matrix<std::size_t> pemutationMatrix)
+{
+    int pmSign;
+    std::size_t size = pemutationMatrix.size();
+    for (std::size_t i=0;i<size;++i){
+        if (i!=pemutationMatrix(i))
+            pmSign*=-1;
+    }
+    return pmSign;
+}
+
 void MainWindow::on_FSpushButtonOpenFile_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
@@ -141,9 +166,10 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
             ui->FStextBrowserDatabaseInfo->append("max_ind: "  +  QString::number(max_ind) + " " + QString::number(FLD));
           } else if (dimension>1){
-            float FND=0, tmp;
+            float FND=0, tmp=0;
             boost::numeric::ublas::matrix<float> sA(dimension,dimension);
             boost::numeric::ublas::matrix<float> sB(dimension,dimension);
+            std::vector<int> maxIndexes;
 
             std::vector<std::vector<int>> indexesCombinationsVector;
             std::vector<bool> areIndexesPermited(database.getNoFeatures());
@@ -211,25 +237,54 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                         sB(j,k)=dispersionB[j]*dispersionB[k];
                     }
                 }
-                std::cout<<"Macierz rorzutu dla klasy A:"<<std::endl;
-                for (int j=0;j<dimension;++j){
-                    for (int k=0;k<dimension;++k){
-                        std::cout<<sA(j,k)<<", ";
-                    }
-                    std::cout<<std::endl;
-                }
-                std::cout<<std::endl;
+//                std::cout<<"Macierz rorzutu dla klasy A:"<<std::endl;
+//                for (int j=0;j<dimension;++j){
+//                    for (int k=0;k<dimension;++k){
+//                        std::cout<<sA(j,k)<<", ";
+//                    }
+//                    std::cout<<std::endl;
+//                }
+//                std::cout<<std::endl;
 
-                std::cout<<"Macierz rorzutu dla klasy B:"<<std::endl;
+//                std::cout<<"Macierz rorzutu dla klasy B:"<<std::endl;
+//                for (int j=0;j<dimension;++j){
+//                    for (int k=0;k<dimension;++k){
+//                        std::cout<<sB(j,k)<<", ";
+//                    }
+//                    std::cout<<std::endl;
+//                }
+//                std::cout<<std::endl;
+                float dispersionBetweenClasses=0;
                 for (int j=0;j<dimension;++j){
-                    for (int k=0;k<dimension;++k){
-                        std::cout<<sB(j,k)<<", ";
-                    }
-                    std::cout<<std::endl;
+                    dispersionBetweenClasses+=(meansA[j]-meansB[j])*(meansA[j]-meansB[j]);
                 }
-                std::cout<<std::endl;
+                dispersionBetweenClasses=sqrt(dispersionBetweenClasses);
+                boost::numeric::ublas::matrix<float> s(dimension,dimension);
+                s=sA+sB;
+//                for (int j=0; j<dimension;++j)
+//                    for(int k=0;k<dimension;++k)
+//                        s(j,k)=sA(j,k)+sB(j,k);
 
+                float dispersionInClasses=matrixDeterminant(s);
+                tmp=dispersionBetweenClasses/dispersionInClasses;
+                std::cout<<"Fisher for current features set: "<<tmp<<std::endl;
+                if (tmp>FND && std::to_string(tmp).compare("inf")!=0){
+                    FND=tmp;
+                    maxIndexes=currentFeatures;
+//                    std::cout<<"Maximum fisher value: "<<FND<<std::endl;
+                }
             }
+            std::string maxIndexesString="";
+            for (int i=0;i<maxIndexes.size();++i){
+                if (i<maxIndexes.size()-1)
+                    maxIndexesString+=std::to_string(maxIndexes.at(i))+", ";
+                else
+                    maxIndexesString+=std::to_string(maxIndexes.at(i));
+            }
+            double fndDouble=(double)FND;
+            std::cout<<"Maximum Fisher value: "<<FND<<std::endl;
+            ui->FStextBrowserDatabaseInfo->append("Optimum features indexes: "+QString::fromStdString(maxIndexesString));
+            ui->FStextBrowserDatabaseInfo->append("Maximum Fisher: "+QString::number(fndDouble));
 
 
         }

@@ -35,6 +35,10 @@ private:
     void CUpdateButtonState(void);
     void  CsetButtonState(bool state);
 
+    float matrixDeterminant(boost::numeric::ublas::matrix<float> matrix);
+
+    int matrixDeterminantSign(const boost::numeric::ublas::permutation_matrix<std::size_t> pemutationMatrix);
+
 private slots:
     void on_FSpushButtonOpenFile_clicked();
 
