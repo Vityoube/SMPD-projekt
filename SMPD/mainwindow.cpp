@@ -171,7 +171,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 //                currentVector++;
 //            }
             boost::numeric::ublas::vector<float> dispersionA(dimension);
-            boost::numeric::ublas::vector<float> dispertionB(dimension);
+            boost::numeric::ublas::vector<float> dispersionB(dimension);
             boost::numeric::ublas::vector<float> meansA(dimension);
             boost::numeric::ublas::vector<float> meansB(dimension);
             for (int i=0;i<indexesCombinationsVector.size();++i){
@@ -190,8 +190,19 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                     }
                     meansA[i]/=aObjectsCount;
                     meansB[i]/=bObjectsCount;
-//                    std::cout<<"Średnia dla cechy #"<<currentFeature<<" dla klasy A = "<<meansA[i]<<std::endl;
-//                    std::cout<<"Średnia dla cechy #"<<currentFeature<<" dla klasy B = "<<meansB[i]<<std::endl;
+                    for (Object currentObjectForDispertion : database.getObjects()){
+                        if (currentObjectForDispertion.compareName("Acer")){
+                            dispersionA[i]+=(currentObjectForDispertion.getFeature(currentFeature)-meansA[i])*
+                                    (currentObjectForDispertion.getFeature(currentFeature)-meansA[i]);
+                        } else if (currentObjectForDispertion.compareName("Quercus")){
+                            dispersionB[i]+=(currentObjectForDispertion.getFeature(currentFeature)-meansB[i])*
+                                    (currentObjectForDispertion.getFeature(currentFeature)-meansB[i]);
+                        }
+                    }
+                    dispersionA[i]=sqrt(dispersionA[i]);
+                    dispersionB[i]=sqrt(dispersionB[i]);
+//                    std::cout<<"Rorzut dla cechy #"<<currentFeature<<" dla klasy A = "<<dispersionA[i]<<std::endl;
+//                    std::cout<<"Rorzut dla cechy #"<<currentFeature<<" dla klasy B = "<<dispersionB[i]<<std::endl;
                 }
 
             }
