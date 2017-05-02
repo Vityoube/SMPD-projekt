@@ -8,6 +8,7 @@
 #include <math.h>
 #include <algorithm>
 #include <iostream>
+#include <iomanip>
 #include <boost/lexical_cast.hpp>
 
 #include "object.h"

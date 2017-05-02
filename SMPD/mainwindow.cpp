@@ -140,6 +140,39 @@ void MainWindow::on_FSpushButtonCompute_clicked()
               }
 
             ui->FStextBrowserDatabaseInfo->append("max_ind: "  +  QString::number(max_ind) + " " + QString::number(FLD));
+          } else if (dimension>1){
+            float FND=0, tmp;
+            boost::numeric::ublas::matrix<float> sA(dimension,dimension);
+            boost::numeric::ublas::matrix<float> sB(dimension,dimension);
+
+            std::vector<std::vector<int>> indexesCombiantionsVector;
+            std::vector<bool> areIndexesPermited(database.getNoFeatures());
+            std::fill(areIndexesPermited.begin(),areIndexesPermited.begin()+dimension,true);
+
+            do {
+                std::vector<int> currentIndexes;
+                for (int i=0;i<database.getNoFeatures();++i){
+                    if (areIndexesPermited[i])
+                        currentIndexes.push_back(i);
+                }
+                indexesCombiantionsVector.push_back(currentIndexes);
+            } while(std::prev_permutation(areIndexesPermited.begin(),areIndexesPermited.end()));
+
+//            int currentVector=0;
+//            for (std::vector<int> currentIndexes :indexesCombiantionsVector){
+//                std::cout<<"Vector #"<<currentVector<<" elements: ";
+//                for (int i=0; i<currentIndexes.size();++i){
+//                    if (i!=currentIndexes.size()-1)
+//                        std::cout<<currentIndexes.at(i)<<", ";
+//                    else
+//                        std::cout<<currentIndexes.at(i);
+//                }
+//                std::cout<<std::endl;
+//                currentVector++;
+//            }
+
+
+
           }
      }
 }
