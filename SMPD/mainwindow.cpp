@@ -176,34 +176,58 @@ void MainWindow::on_FSpushButtonCompute_clicked()
             boost::numeric::ublas::vector<float> meansB(dimension);
             for (int i=0;i<indexesCombinationsVector.size();++i){
                 std::vector<int> currentFeatures=indexesCombinationsVector.at(i);
-                for (int i=0;i<dimension;++i){
-                    int currentFeature=currentFeatures.at(i);
+                for (int j=0;j<dimension;++j){
+                    int currentFeature=currentFeatures.at(j);
                     int aObjectsCount=0, bObjectsCount=0;
                     for (Object currentObject: database.getObjects()){
                         if (currentObject.compareName("Acer")){
-                            meansA[i]+=currentObject.getFeature(currentFeature);
+                            meansA[j]+=currentObject.getFeature(currentFeature);
                             aObjectsCount++;
                         } else if (currentObject.compareName("Quercus")){
-                            meansB[i]+=currentObject.getFeature(currentFeature);
+                            meansB[j]+=currentObject.getFeature(currentFeature);
                             bObjectsCount++;
                         }
                     }
-                    meansA[i]/=aObjectsCount;
-                    meansB[i]/=bObjectsCount;
+                    meansA[j]/=aObjectsCount;
+                    meansB[j]/=bObjectsCount;
                     for (Object currentObjectForDispertion : database.getObjects()){
                         if (currentObjectForDispertion.compareName("Acer")){
-                            dispersionA[i]+=(currentObjectForDispertion.getFeature(currentFeature)-meansA[i])*
-                                    (currentObjectForDispertion.getFeature(currentFeature)-meansA[i]);
+                            dispersionA[j]+=(currentObjectForDispertion.getFeature(currentFeature)-meansA[j])*
+                                    (currentObjectForDispertion.getFeature(currentFeature)-meansA[j]);
                         } else if (currentObjectForDispertion.compareName("Quercus")){
-                            dispersionB[i]+=(currentObjectForDispertion.getFeature(currentFeature)-meansB[i])*
-                                    (currentObjectForDispertion.getFeature(currentFeature)-meansB[i]);
+                            dispersionB[j]+=(currentObjectForDispertion.getFeature(currentFeature)-meansB[j])*
+                                    (currentObjectForDispertion.getFeature(currentFeature)-meansB[j]);
                         }
                     }
-                    dispersionA[i]=sqrt(dispersionA[i]);
-                    dispersionB[i]=sqrt(dispersionB[i]);
+                    dispersionA[j]=sqrt(dispersionA[j]);
+                    dispersionB[j]=sqrt(dispersionB[j]);
+
 //                    std::cout<<"Rorzut dla cechy #"<<currentFeature<<" dla klasy A = "<<dispersionA[i]<<std::endl;
 //                    std::cout<<"Rorzut dla cechy #"<<currentFeature<<" dla klasy B = "<<dispersionB[i]<<std::endl;
                 }
+                for (int j=0;j<dimension;++j){
+                    for (int k=0;k<dimension;++k){
+                        sA(j,k)=dispersionA[j]*dispersionA[k];
+                        sB(j,k)=dispersionB[j]*dispersionB[k];
+                    }
+                }
+                std::cout<<"Macierz rorzutu dla klasy A:"<<std::endl;
+                for (int j=0;j<dimension;++j){
+                    for (int k=0;k<dimension;++k){
+                        std::cout<<sA(j,k)<<", ";
+                    }
+                    std::cout<<std::endl;
+                }
+                std::cout<<std::endl;
+
+                std::cout<<"Macierz rorzutu dla klasy B:"<<std::endl;
+                for (int j=0;j<dimension;++j){
+                    for (int k=0;k<dimension;++k){
+                        std::cout<<sB(j,k)<<", ";
+                    }
+                    std::cout<<std::endl;
+                }
+                std::cout<<std::endl;
 
             }
 
