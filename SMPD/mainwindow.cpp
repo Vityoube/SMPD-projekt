@@ -167,8 +167,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
             ui->FStextBrowserDatabaseInfo->append("max_ind: "  +  QString::number(max_ind) + " " + QString::number(FLD));
           } else if (dimension>1){
             float FND=0, tmp=0;
-            boost::numeric::ublas::matrix<float> sA(dimension,dimension);
-            boost::numeric::ublas::matrix<float> sB(dimension,dimension);
+
             std::vector<int> maxIndexes;
 
             std::vector<std::vector<int>> indexesCombinationsVector;
@@ -196,11 +195,13 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 //                std::cout<<std::endl;
 //                currentVector++;
 //            }
-            boost::numeric::ublas::vector<float> dispersionA(dimension);
-            boost::numeric::ublas::vector<float> dispersionB(dimension);
-            boost::numeric::ublas::vector<float> meansA(dimension);
-            boost::numeric::ublas::vector<float> meansB(dimension);
+
             for (int i=0;i<indexesCombinationsVector.size();++i){
+
+                boost::numeric::ublas::matrix<float> dispersionA(dimension,dimension);
+                boost::numeric::ublas::matrix<float> dispersionB(dimension,dimension);
+                boost::numeric::ublas::vector<float> meansA(dimension);
+                boost::numeric::ublas::vector<float> meansB(dimension);
                 std::vector<int> currentFeatures=indexesCombinationsVector.at(i);
                 for (int j=0;j<dimension;++j){
                     int currentFeature=currentFeatures.at(j);
@@ -217,26 +218,23 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                     meansA[j]/=aObjectsCount;
                     meansB[j]/=bObjectsCount;
                     for (Object currentObjectForDispertion : database.getObjects()){
+                        int currentClassAObject=0, currentClassBObject=0;
                         if (currentObjectForDispertion.compareName("Acer")){
-                            dispersionA[j]+=(currentObjectForDispertion.getFeature(currentFeature)-meansA[j])*
-                                    (currentObjectForDispertion.getFeature(currentFeature)-meansA[j]);
+                            dispersionA(j,currentClassAObject)+=(currentObjectForDispertion.getFeature(currentFeature)-meansA[j]);
+                            currentClassAObject++;
                         } else if (currentObjectForDispertion.compareName("Quercus")){
-                            dispersionB[j]+=(currentObjectForDispertion.getFeature(currentFeature)-meansB[j])*
-                                    (currentObjectForDispertion.getFeature(currentFeature)-meansB[j]);
+                            dispersionB(j,currentClassBObject)+=(currentObjectForDispertion.getFeature(currentFeature)-meansB[j]);
+                            currentClassBObject++;
                         }
                     }
-                    dispersionA[j]=sqrt(dispersionA[j]);
-                    dispersionB[j]=sqrt(dispersionB[j]);
 
 //                    std::cout<<"Rorzut dla cechy #"<<currentFeature<<" dla klasy A = "<<dispersionA[i]<<std::endl;
 //                    std::cout<<"Rorzut dla cechy #"<<currentFeature<<" dla klasy B = "<<dispersionB[i]<<std::endl;
                 }
-                for (int j=0;j<dimension;++j){
-                    for (int k=0;k<dimension;++k){
-                        sA(j,k)=dispersionA[j]*dispersionA[k];
-                        sB(j,k)=dispersionB[j]*dispersionB[k];
-                    }
-                }
+                boost::numeric::ublas::matrix<float> dispersionATransposed=boost::numeric::ublas::trans(dispersionA);
+                boost::numeric::ublas::matrix<float> dispersionBTransposed=boost::numeric::ublas::trans(dispersionB);
+                boost::numeric::ublas::matrix<float> sA=boost::numeric::ublas::prod(dispersionA,dispersionATransposed);
+                boost::numeric::ublas::matrix<float> sB=boost::numeric::ublas::prod(dispersionB,dispersionBTransposed);
 //                std::cout<<"Macierz rorzutu dla klasy A:"<<std::endl;
 //                for (int j=0;j<dimension;++j){
 //                    for (int k=0;k<dimension;++k){
@@ -255,8 +253,9 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 //                }
 //                std::cout<<std::endl;
                 float dispersionBetweenClasses=0;
+                boost::numeric::ublas::vector<float> mAmB=meansA-meansB;
                 for (int j=0;j<dimension;++j){
-                    dispersionBetweenClasses+=(meansA[j]-meansB[j])*(meansA[j]-meansB[j]);
+                    dispersionBetweenClasses+=mAmB(j);
                 }
                 dispersionBetweenClasses=sqrt(dispersionBetweenClasses);
                 boost::numeric::ublas::matrix<float> s(dimension,dimension);
