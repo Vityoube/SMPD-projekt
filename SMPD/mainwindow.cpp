@@ -139,8 +139,6 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                     std::cout<<"I\'m in average and standard deviation calculation. Current Object number: "<<currentObjectNumber++<<std::endl;
                     std::cout<<"Obiekt "<<j<<" należy do klasy "<<ob.getClassName()<<std::endl;
                     std::cout<<"Wartość cechy "<<i<<" dla obiekta "<<currentObjectNumber<<" wynosi: "<<(float)(ob.getFeature(i))<<std::endl;
-//                    std::cout<<"Średnia dla bieżacej klasy:"<<currentClassStandartDeviation<<std::endl;
-//                    std::cout<<"Odchylenie standartowe dla bieżącej klasy: "<<currentClassAverage<<std::endl;
 
                 }
                 std::cout<<"Średnia dla klasy A: "<<classAverages["Acer"]<<std::endl<<"Średnia dla klasy B: "<<classAverages["Quercus"]<<std::endl
@@ -182,20 +180,6 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                 }
                 indexesCombinationsVector.push_back(currentIndexes);
             } while(std::prev_permutation(areIndexesPermited.begin(),areIndexesPermited.end()));
-
-//            int currentVector=0;
-//            for (std::vector<int> currentIndexes :indexesCombiantionsVector){
-//                std::cout<<"Vector #"<<currentVector<<" elements: ";
-//                for (int i=0; i<currentIndexes.size();++i){
-//                    if (i!=currentIndexes.size()-1)
-//                        std::cout<<currentIndexes.at(i)<<", ";
-//                    else
-//                        std::cout<<currentIndexes.at(i);
-//                }
-//                std::cout<<std::endl;
-//                currentVector++;
-//            }
-
             for (int i=0;i<indexesCombinationsVector.size();++i){
 
                 boost::numeric::ublas::matrix<float> dispersionA(dimension,dimension);
@@ -227,30 +211,11 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                             currentClassBObject++;
                         }
                     }
-
-//                    std::cout<<"Rorzut dla cechy #"<<currentFeature<<" dla klasy A = "<<dispersionA[i]<<std::endl;
-//                    std::cout<<"Rorzut dla cechy #"<<currentFeature<<" dla klasy B = "<<dispersionB[i]<<std::endl;
                 }
                 boost::numeric::ublas::matrix<float> dispersionATransposed=boost::numeric::ublas::trans(dispersionA);
                 boost::numeric::ublas::matrix<float> dispersionBTransposed=boost::numeric::ublas::trans(dispersionB);
                 boost::numeric::ublas::matrix<float> sA=boost::numeric::ublas::prod(dispersionA,dispersionATransposed);
                 boost::numeric::ublas::matrix<float> sB=boost::numeric::ublas::prod(dispersionB,dispersionBTransposed);
-//                std::cout<<"Macierz rorzutu dla klasy A:"<<std::endl;
-//                for (int j=0;j<dimension;++j){
-//                    for (int k=0;k<dimension;++k){
-//                        std::cout<<sA(j,k)<<", ";
-//                    }
-//                    std::cout<<std::endl;
-//                }
-//                std::cout<<std::endl;
-
-//                std::cout<<"Macierz rorzutu dla klasy B:"<<std::endl;
-//                for (int j=0;j<dimension;++j){
-//                    for (int k=0;k<dimension;++k){
-//                        std::cout<<sB(j,k)<<", ";
-//                    }
-//                    std::cout<<std::endl;
-//                }
 //                std::cout<<std::endl;
                 float dispersionBetweenClasses=0;
                 boost::numeric::ublas::vector<float> mAmB=meansA-meansB;
@@ -260,10 +225,6 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                 dispersionBetweenClasses=sqrt(dispersionBetweenClasses);
                 boost::numeric::ublas::matrix<float> s(dimension,dimension);
                 s=sA+sB;
-//                for (int j=0; j<dimension;++j)
-//                    for(int k=0;k<dimension;++k)
-//                        s(j,k)=sA(j,k)+sB(j,k);
-
                 float dispersionInClasses=matrixDeterminant(s);
                 tmp=dispersionBetweenClasses/dispersionInClasses;
                 std::cout<<"Fisher for current features set: "<<tmp<<std::endl;
@@ -285,6 +246,27 @@ void MainWindow::on_FSpushButtonCompute_clicked()
             ui->FStextBrowserDatabaseInfo->append("Optimum features indexes: "+QString::fromStdString(maxIndexesString));
             ui->FStextBrowserDatabaseInfo->append("Maximum Fisher: "+QString::number(fndDouble));
 
+
+        }
+    } else if (ui->FSradioButtonSFS->isChecked()){
+        std::vector<Object> classA, classB;
+        for (Object currentObject: database.getObjects()){
+            if (currentObject.compareName("Acer"))
+                classA.push_back(currentObject);
+            else if (currentObject.compareName("Quercus"))
+                classB.push_back(currentObject);
+        }
+        int classACount=classA.size(), classBCount=classB.size();
+        for (int featureCount=1;featureCount<=dimension;featureCount++){
+            std::vector<int> maxIndexes;
+            boost::numeric::ublas::vector meansA(featureCount), meansB(featureCount);
+            boost::numeric::ublas::matrix variationA(featureCount,classACount), variationB(featureCount,classBCount);
+            for (int currentFeatureInDimension=0; currentFeatureInDimension<database.getNoFeatures();i++){
+                if (std::find(maxIndexes.begin(),maxIndexes.end(),currentFeatureInDimension)==maxIndexes.end()){
+
+                }
+
+            }
 
         }
     }
