@@ -36,6 +36,31 @@ void MainWindow::updateDatabaseInfo()
 
 }
 
+int MainWindow::determinant_sign(const boost::numeric::ublas::permutation_matrix<std::size_t>& pm)
+{
+        int pm_sign = 1;
+        std::size_t size = pm.size();
+        for (std::size_t i = 0; i < size; ++i)
+                if (i != pm(i))
+                        pm_sign *= -1.0; // swap_rows would swap a pair of rows here, so wechange sign
+        return pm_sign;
+}
+
+double MainWindow::determinant(boost::numeric::ublas::matrix<float>& m)
+{
+        boost::numeric::ublas::permutation_matrix<std::size_t> pm(m.size1());
+        double det = 1.0;
+        if (boost::numeric::ublas::lu_factorize(m, pm)) {
+                det = 0.0;
+        }
+        else {
+                for (int i = 0; i < m.size1(); i++)
+                        det *= m(i, i); // multiply by elements on diagonal
+                det = det * determinant_sign(pm);
+        }
+        return det;
+}
+
 void MainWindow::FSupdateButtonState(void)
 {
     if(database.getNoObjects()==0)
@@ -71,30 +96,69 @@ void MainWindow::CsetButtonState(bool state)
     ui->CpushButtonSaveFile->setEnabled(state);
 }
 
-float MainWindow::matrixDeterminant(boost::numeric::ublas::matrix<float> matrix)
-{
-    boost::numeric::ublas::permutation_matrix<std::size_t> pm(matrix.size1());
-    float determinant = 1.0;
-    if (boost::numeric::ublas::lu_factorize(matrix, pm))
-        determinant=0.0;
-    else
-        for(int i=0;i<matrix.size1();++i){
-            determinant*=matrix(i,i);
-         determinant*=matrixDeterminantSign(pm);
+
+
+float MainWindow::matrixDeterminant( boost::numeric::ublas::matrix<float>& m ) {
+    float det = 1.0;
+    if (m.size1()>2 && m.size2()>2){
+        for (int i=0;i<m.size1();i++){
+            for (int j=0;j<m.size2();j++){
+                float a=m(i,j);
+                int sign=pow(-1,i+j);
+                std::vector<float> temporalMinorMatrix;
+                boost::numeric::ublas::matrix<float> minorMatrix(m.size1()-1,m.size2()-1);
+//                std::cout<<"Current element "<<i<<", "<<j<<"="<<a<<std::endl;
+                for(int k=0;k<m.size1();k++){
+                    for (int z=0;z<m.size2();z++){
+                        temporalMinorMatrix.push_back(m(k,z));
+//                        std::cout<<"Matrix element "<<k<<", "<<z<< " to minor: "<<m(k,z)<<std::endl;
+                        if (k==i)
+                            temporalMinorMatrix.pop_back();
+                        if (z==j && k!=i){
+                            temporalMinorMatrix.pop_back();
+                        }
+                    }
+                }
+//                std::cout<<"Temporal minor matrix: ";
+//                for (float element : temporalMinorMatrix)
+//                    std::cout<<element<<", ";
+//                std::cout<<std::endl;
+                int mK=0, mZ=0;
+//                std::cout<<"Temporal minor matrix size "<<temporalMinorMatrix.size()<<std::endl;
+//                std::cout<<"Minor matrix "<<minorMatrix.size1()<<" x "<<minorMatrix.size2()<<std::endl;
+                for (int k=0;k<temporalMinorMatrix.size();k++){
+                    if ((k)%minorMatrix.size2()!=0 || k==0){
+                        minorMatrix(mK,mZ)=temporalMinorMatrix.at(k);
+//                        std::cout<<"mK: "<<mK<<" mZ: "<<mZ<<" elementValue: "<<minorMatrix(mK,mZ)<<std::endl;
+                        ++mZ;
+                    } else if ((k)%(minorMatrix.size1()*minorMatrix.size2())==0 && (k)%minorMatrix.size2()!=0){
+                        minorMatrix(mK,mZ)=temporalMinorMatrix.at(k);
+//                        std::cout<<"mK: "<<mK<<" mZ: "<<mZ<<" elementValue: "<<minorMatrix(mK,mZ)<<std::endl;
+
+                    }else{
+                        mK++;
+                        mZ=0;
+                        minorMatrix(mK,mZ)=temporalMinorMatrix.at(k);
+//                        std::cout<<"mK: "<<mK<<" mZ: "<<mZ<<" elementValue: "<<minorMatrix(mK,mZ)<<std::endl;
+                        mZ++;
+                    }
+                }
+//                std::cout<<"I'm here!"<<std::endl;
+                det=sign*a*matrixDeterminant(minorMatrix);
+            }
+        }
+    } else if (m.size1()==2 && m.size2()==2){
+        det=m(0,0)*m(1,1)-m(0,1)*m(1,0);
+//        std::cout<<"Matrix: \n"<<m(0,0)<<", "<<m(0,1)<<"\n"<<m(1,0)<<", "<<m(1,1)<<std::endl;
+    } else if (m.size1()==1 && m.size2()==1){
+        det=m(0,0);
+
     }
-    return determinant;
+//    if (m.size1()>2)
+//        std::cout<<"Determinant of matrix: "<<det<<std::endl;
+    return det;
 }
 
-int MainWindow::matrixDeterminantSign(const boost::numeric::ublas::permutation_matrix<std::size_t> pemutationMatrix)
-{
-    int pmSign;
-    std::size_t size = pemutationMatrix.size();
-    for (std::size_t i=0;i<size;++i){
-        if (i!=pemutationMatrix(i))
-            pmSign*=-1;
-    }
-    return pmSign;
-}
 
 void MainWindow::on_FSpushButtonOpenFile_clicked()
 {
@@ -171,7 +235,14 @@ void MainWindow::on_FSpushButtonCompute_clicked()
             std::vector<std::vector<int>> indexesCombinationsVector;
             std::vector<bool> areIndexesPermited(database.getNoFeatures());
             std::fill(areIndexesPermited.begin(),areIndexesPermited.begin()+dimension,true);
-
+            std::vector<Object> classA, classB;
+            for (Object currentObject: database.getObjects()){
+                if (currentObject.compareName("Acer"))
+                    classA.push_back(currentObject);
+                else if (currentObject.compareName("Quercus"))
+                    classB.push_back(currentObject);
+            }
+            int classACount=classA.size(), classBCount=classB.size();
             do {
                 std::vector<int> currentIndexes;
                 for (int i=0;i<database.getNoFeatures();++i){
@@ -182,50 +253,78 @@ void MainWindow::on_FSpushButtonCompute_clicked()
             } while(std::prev_permutation(areIndexesPermited.begin(),areIndexesPermited.end()));
             for (int i=0;i<indexesCombinationsVector.size();++i){
 
-                boost::numeric::ublas::matrix<float> dispersionA(dimension,dimension);
-                boost::numeric::ublas::matrix<float> dispersionB(dimension,dimension);
+                boost::numeric::ublas::matrix<float> dispersionA(dimension,classACount);
+                boost::numeric::ublas::matrix<float> dispersionB(dimension,classBCount);
                 boost::numeric::ublas::vector<float> meansA(dimension);
                 boost::numeric::ublas::vector<float> meansB(dimension);
+                for (int j=0;j<dispersionA.size1();j++){
+                    for (int k=0;k<dispersionA.size2();k++){
+                        dispersionA(j,k)=0.0f;
+                    }
+                }
+                for (int j=0;j<dispersionB.size1();j++){
+                    for (int k=0;k<dispersionB.size2();k++){
+                        dispersionB(j,k)=0.0f;
+                    }
+                }
+                for (int j=0;j<meansA.size();j++){
+                        meansA(j)=0.0f;
+                }
+                for (int j=0;j<meansB.size();j++){
+                        meansB(j)=0.0f;
+                }
                 std::vector<int> currentFeatures=indexesCombinationsVector.at(i);
                 for (int j=0;j<dimension;++j){
                     int currentFeature=currentFeatures.at(j);
                     int aObjectsCount=0, bObjectsCount=0;
-                    for (Object currentObject: database.getObjects()){
-                        if (currentObject.compareName("Acer")){
-                            meansA[j]+=currentObject.getFeature(currentFeature);
-                            aObjectsCount++;
-                        } else if (currentObject.compareName("Quercus")){
-                            meansB[j]+=currentObject.getFeature(currentFeature);
-                            bObjectsCount++;
-                        }
+                    for (Object classAObject : classA){
+                        meansA(j)+=classAObject.getFeature(currentFeature);
                     }
-                    meansA[j]/=aObjectsCount;
-                    meansB[j]/=bObjectsCount;
-                    for (Object currentObjectForDispertion : database.getObjects()){
-                        int currentClassAObject=0, currentClassBObject=0;
-                        if (currentObjectForDispertion.compareName("Acer")){
-                            dispersionA(j,currentClassAObject)+=(currentObjectForDispertion.getFeature(currentFeature)-meansA[j]);
-                            currentClassAObject++;
-                        } else if (currentObjectForDispertion.compareName("Quercus")){
-                            dispersionB(j,currentClassBObject)+=(currentObjectForDispertion.getFeature(currentFeature)-meansB[j]);
-                            currentClassBObject++;
-                        }
+                    for (Object classBObject : classB){
+                        meansB(j)+=classBObject.getFeature(currentFeature);
+                    }
+                    meansA(j)/=classACount;
+                    meansB(j)/=classBCount;
+                    for (int k=0;k<classACount;k++){
+                        Object currentAObject=classA.at(k);
+                        dispersionA(j,k)=currentAObject.getFeature(currentFeature)-meansA(j);
+                    }
+                    for (int k=0;k<classBCount;k++){
+                        Object currentBObject=classB.at(k);
+                        dispersionB(j,k)=currentBObject.getFeature(currentFeature)-meansB(j);
                     }
                 }
                 boost::numeric::ublas::matrix<float> dispersionATransposed=boost::numeric::ublas::trans(dispersionA);
                 boost::numeric::ublas::matrix<float> dispersionBTransposed=boost::numeric::ublas::trans(dispersionB);
-                boost::numeric::ublas::matrix<float> sA=boost::numeric::ublas::prod(dispersionA,dispersionATransposed);
-                boost::numeric::ublas::matrix<float> sB=boost::numeric::ublas::prod(dispersionB,dispersionBTransposed);
-//                std::cout<<std::endl;
-                float dispersionBetweenClasses=0;
-                boost::numeric::ublas::vector<float> mAmB=meansA-meansB;
-                for (int j=0;j<dimension;++j){
-                    dispersionBetweenClasses+=mAmB(j);
+
+                boost::numeric::ublas::matrix<float> sA(dimension,dimension);
+                boost::numeric::ublas::matrix<float> sB(dimension,dimension);
+                for (int j=0;j<sA.size1();j++){
+                    for (int z=0;z<sA.size2();z++){
+                        sA(j,z)=0.0;
+                        for( int z1=0;z1<dispersionA.size2();z1++){
+                            sA(j,z)+=dispersionA(j,z1)*dispersionATransposed(z1,z);
+                        }
+                    }
                 }
+                for (int j=0;j<sB.size1();j++){
+                    for (int z=0;z<sB.size2();z++){
+                        sB(j,z)=0.0;
+                        for( int z1=0;z1<dispersionB.size2();z1++){
+                            sB(j,z)+=dispersionB(j,z1)*dispersionBTransposed(z1,z);
+                        }
+                    }
+                }
+                float dispersionBetweenClasses=0;
+                for (int j=0;j<dimension;++j){
+                    dispersionBetweenClasses+=(meansA(j)-meansB(j))*(meansA(j)-meansB(j));
+                }                
                 dispersionBetweenClasses=sqrt(dispersionBetweenClasses);
+                std::cout<<"dispersion between classes in current set: "<<dispersionBetweenClasses<<std::endl;
                 boost::numeric::ublas::matrix<float> s(dimension,dimension);
                 s=sA+sB;
-                float dispersionInClasses=matrixDeterminant(s);
+                float dispersionInClasses=determinant(s);
+                std::cout<<"dispersion in classes in current set: "<<dispersionInClasses<<std::endl;
                 tmp=dispersionBetweenClasses/dispersionInClasses;
                 std::cout<<"Fisher for current features set: "<<tmp<<std::endl;
                 if (tmp>FND && std::to_string(tmp).compare("inf")!=0){
@@ -256,19 +355,157 @@ void MainWindow::on_FSpushButtonCompute_clicked()
             else if (currentObject.compareName("Quercus"))
                 classB.push_back(currentObject);
         }
-        int classACount=classA.size(), classBCount=classB.size();
+        int classACount=classA.size(), classBCount=classB.size();        
+        std::vector<int> maxIndexes;
+        boost::numeric::ublas::vector<float> meansA(dimension), meansB(dimension);
+        boost::numeric::ublas::matrix<float> dispersionA(dimension,classACount), dispersionB(dimension,classBCount);
+        float maxSFS=0, currentMaxSFS=0;
+        int currentMaxIndex=-1;
         for (int featureCount=1;featureCount<=dimension;featureCount++){
-            std::vector<int> maxIndexes;
-            boost::numeric::ublas::vector meansA(featureCount), meansB(featureCount);
-            boost::numeric::ublas::matrix variationA(featureCount,classACount), variationB(featureCount,classBCount);
-            for (int currentFeatureInDimension=0; currentFeatureInDimension<database.getNoFeatures();i++){
-                if (std::find(maxIndexes.begin(),maxIndexes.end(),currentFeatureInDimension)==maxIndexes.end()){
-
+            float currentMaxAMean=0.0f,currentMaxBMean=0.0f;
+            currentMaxSFS=0;
+            boost::numeric::ublas::matrix<float> currentDispersionA(dimension,classACount), currentDispersionB(dimension,classBCount);
+            for (int currentFeature=0; currentFeature<database.getNoFeatures();currentFeature++){                
+                if (std::find(maxIndexes.begin(),maxIndexes.end(),currentFeature)==maxIndexes.end()){
+                    boost::numeric::ublas::vector<float> currentMeansA(featureCount), currentMeansB(featureCount);
+                    if (featureCount>1){
+                        for (int i=0;i<featureCount-1;i++){
+                            currentMeansA(i)=meansA(i);
+                            currentMeansB(i)=meansB(i);
+                        }
+                    }
+                    currentMeansA(featureCount-1)=0.0;
+                    currentMeansB(featureCount-1)=0.0;
+                    boost::numeric::ublas::matrix<float> sA(featureCount,featureCount), sB(featureCount,featureCount);
+                    for (int i=0;i<sA.size1();i++){
+                        for (int j=0;j<sA.size2();j++){
+                            sA(i,j)=0.0f;
+                        }
+                    }
+                    for (int i=0;i<sB.size1();i++){
+                        for (int j=0;j<sB.size2();j++){
+                            sB(i,j)=0.0f;
+                        }
+                    }
+                    for (Object classAObject : classA){
+                        currentMeansA(featureCount-1)+=classAObject.getFeature(currentFeature);
+                    }
+                    for (Object classBObject : classB){
+                        currentMeansB(featureCount-1)+=classBObject.getFeature(currentFeature);
+                    }
+                    currentMeansA(featureCount-1)/=classACount;
+                    currentMeansB(featureCount-1)/=classBCount;
+                    for( int j=0;j<featureCount;j++){
+                        for (int i=0; i<classACount;i++){
+                            Object currentAObject=classA.at(i);
+                            currentDispersionA(j,i)=currentAObject.getFeature(currentFeature)-currentMeansA(j);
+                        }
+                    }
+                    for( int j=0;j<featureCount;j++){
+                        for (int i=0; i<classBCount;i++){
+                            Object currentBObject=classB.at(i);
+                            currentDispersionB(j,i)=currentBObject.getFeature(currentFeature)-currentMeansB(j);
+                        }
+                    }
+//                    std::cout<<"Dispersion matrix A: "<<std::endl;
+//                    for (int i=0;i<dispersionA.size1();i++){
+//                        for (int j=0;j<dispersionA.size2();j++){
+//                            std::cout<<dispersionA(i,j)<<", ";
+//                        }
+//                        std::cout<<std::endl;
+//                    }
+//                    std::cout<<"Dispersion matrix B: "<<std::endl;
+//                    for (int i=0;i<dispersionB.size1();i++){
+//                        for (int j=0;j<dispersionB.size2();j++){
+//                            std::cout<<dispersionB(i,j)<<", ";
+//                       }
+//                       std::cout<<std::endl;
+//                   }
+                    boost::numeric::ublas::matrix<float> currentDispersionATransposed=boost::numeric::ublas::trans(currentDispersionA);
+                    boost::numeric::ublas::matrix<float> currentDispersionBTransposed=boost::numeric::ublas::trans(currentDispersionB);
+                    //                    std::cout<<"Dispersion matrix A transposed: "<<std::endl;
+                    //                       for (int i=0;i<dispersionATransposed.size1();i++){
+                    //                           for (int j=0;j<dispersionATransposed.size2();j++){
+                    //                               std::cout<<dispersionATransposed(i,j)<<", ";
+                    //                           }
+                    //                           std::cout<<std::endl;
+                    //                       }
+                    //                       std::cout<<"Dispersion matrix B transposed: "<<std::endl;
+                    //                       for (int i=0;i<dispersionBTransposed.size1();i++){
+                    //                           for (int j=0;j<dispersionBTransposed.size2();j++){
+                    //                               std::cout<<dispersionBTransposed(i,j)<<", ";
+                    //                          }
+                    //                          std::cout<<std::endl;
+                    //                      }
+                    for (int j=0;j<sA.size1();j++){
+                        for (int z=0;z<sA.size2();z++){
+                            for( int z1=0;z1<dispersionA.size2();z1++){
+                                sA(j,z)+=currentDispersionA(j,z1)*currentDispersionATransposed(z1,z);
+                            }
+                        }
+                    }
+                    for (int j=0;j<sB.size1();j++){
+                        for (int z=0;z<sB.size2();z++){
+                            for( int z1=0;z1<dispersionB.size2();z1++){
+                                sB(j,z)+=currentDispersionB(j,z1)*currentDispersionBTransposed(z1,z);
+                            }
+                        }
+                    }
+                    std::cout<<"sA matrix: "<<std::endl;
+                    for (int i=0;i<sA.size1();i++){
+                        for (int j=0;j<sA.size2();j++){
+                            std::cout<<sA(i,j)<<", ";
+                        }
+                        std::cout<<std::endl;
+                    }
+                    std::cout<<"sB matrix: "<<std::endl;
+                    for (int i=0;i<sB.size1();i++){
+                        for (int j=0;j<sB.size2();j++){
+                            std::cout<<sB(i,j)<<", ";
+                        }
+                        std::cout<<std::endl;
+                    }
+                    float dispersionBetweenClasses=0.0;
+                    for (int i=0;i<featureCount;i++)
+                        dispersionBetweenClasses+=(currentMeansA(i)-currentMeansB(i))*(currentMeansA(i)-currentMeansB(i));
+                    dispersionBetweenClasses=sqrt(dispersionBetweenClasses);
+                    boost::numeric::ublas::matrix<float> s(featureCount,featureCount);
+                    s=sA+sB;
+                    float dispersionInClasses=0.0;
+                    dispersionInClasses=determinant(s);
+                    float currentSFS=dispersionBetweenClasses/dispersionInClasses;
+                    std::cout<<"dispersion in classes: "<<dispersionInClasses<<std::endl;
+                    std::cout<<"dispersion between classes: "<<dispersionBetweenClasses<<std::endl;
+                    std::cout<<"SFS value: "<<currentSFS<<std::endl;
+                    if (currentSFS>currentMaxSFS   && std::to_string(currentSFS).compare("inf")!=0){
+                        currentMaxSFS=currentSFS;
+                        currentMaxIndex=currentFeature;
+                        currentMaxAMean=currentMeansA(featureCount-1);
+                        currentMaxBMean=currentMeansB(featureCount-1);
+                    }
                 }
-
             }
 
+            if (currentMaxIndex!=-1)
+                maxIndexes.push_back(currentMaxIndex);
+            meansA(featureCount-1)=currentMaxAMean;
+            meansB(featureCount-1)=currentMaxBMean;
+            maxSFS=currentMaxSFS;
+            currentMaxIndex=-1;
+
         }
+//        std::cout<<"Max SFS value: "<<maxSFS<<std::endl;
+        double doubleMaxSFS=(double)maxSFS;
+        std::string maxIndexesString="";
+        for (int i=0;i<maxIndexes.size();++i){
+            if (i<maxIndexes.size()-1)
+                maxIndexesString+=std::to_string(maxIndexes.at(i))+", ";
+            else
+                maxIndexesString+=std::to_string(maxIndexes.at(i));
+        }
+        ui->FStextBrowserDatabaseInfo->append("Optimum features indexes: "+QString::fromStdString(maxIndexesString));
+        ui->FStextBrowserDatabaseInfo->append("Maximum SFS: "+QString::number(doubleMaxSFS));
+
     }
 }
 
