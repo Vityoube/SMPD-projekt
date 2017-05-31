@@ -57,7 +57,7 @@ public:
     void clear();
     bool load(const std::string &fileName);
     void save(const std::string &fileName);
-    bool trainObjects(double trainingPartPercent);
+    bool trainObjects(double trainingPartPercent, std::string method);
     double classifyNN();
     double classifyNM();
 

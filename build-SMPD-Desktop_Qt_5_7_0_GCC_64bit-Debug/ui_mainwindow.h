@@ -60,6 +60,7 @@ public:
     QLabel *ClabelTraningPart;
     QTextBrowser *CtextBrowser;
     QLineEdit *CTrainPartLineEdit;
+    QComboBox *CcomboBoxValidation;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
@@ -73,7 +74,7 @@ public:
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         tabWidget = new QTabWidget(centralWidget);
         tabWidget->setObjectName(QStringLiteral("tabWidget"));
-        tabWidget->setGeometry(QRect(10, 0, 971, 491));
+        tabWidget->setGeometry(QRect(0, -10, 971, 491));
         tabP = new QWidget();
         tabP->setObjectName(QStringLiteral("tabP"));
         PpushButtonSelectFolder = new QPushButton(tabP);
@@ -154,6 +155,10 @@ public:
         CTrainPartLineEdit = new QLineEdit(tabC);
         CTrainPartLineEdit->setObjectName(QStringLiteral("CTrainPartLineEdit"));
         CTrainPartLineEdit->setGeometry(QRect(390, 70, 71, 22));
+        CcomboBoxValidation = new QComboBox(tabC);
+        CcomboBoxValidation->setObjectName(QStringLiteral("CcomboBoxValidation"));
+        CcomboBoxValidation->setEnabled(false);
+        CcomboBoxValidation->setGeometry(QRect(210, 110, 79, 22));
         tabWidget->addTab(tabC, QString());
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
@@ -169,7 +174,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(2);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -194,6 +199,12 @@ public:
         ClabelClassifiers->setText(QApplication::translate("MainWindow", "<html><head/><body><p><span style=\" font-size:9pt;\">Classifiers:</span></p></body></html>", 0));
         CpushButtonExecute->setText(QApplication::translate("MainWindow", "Execute", 0));
         ClabelTraningPart->setText(QApplication::translate("MainWindow", "<html><head/><body><p><span style=\" font-size:9pt;\">Training part:</span></p></body></html>", 0));
+        CcomboBoxValidation->clear();
+        CcomboBoxValidation->insertItems(0, QStringList()
+         << QApplication::translate("MainWindow", "Standart", 0)
+         << QApplication::translate("MainWindow", "Cross Validation", 0)
+         << QApplication::translate("MainWindow", "Bootstrap", 0)
+        );
         tabWidget->setTabText(tabWidget->indexOf(tabC), QApplication::translate("MainWindow", "Classifiers", 0));
     } // retranslateUi
 

@@ -234,41 +234,81 @@ void Database::save(const std::string &fileName)
     file.close();
 }
 
-bool Database::trainObjects(double trainingPartPercent)
+bool Database::trainObjects(double trainingPartPercent,std::string method)
 {
     testObjects.clear();
     trainingObjects.clear();
     trainObjectsIds.clear();
-    if (ceil(objects.size()*trainingPartPercent)<objects.size()){
-        noTrainingObjects=objects.size()*trainingPartPercent;
-        while(trainingObjects.size()<noTrainingObjects){
-            unsigned int currentObjectId=rand()%noObjects;
-            if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),currentObjectId)!=trainObjectsIds.end())
-                continue;
-            trainingObjects.push_back(objects.at(currentObjectId));
-            trainObjectsIds.push_back(currentObjectId);
-        }
-        noTestObjects=objects.size()-noTrainingObjects;
-        std::cout<<"objects size: "<<objects.size()<<std::endl;
-        for (int i=0;i<objects.size();i++){
-            Object object=objects.at(i);
-            std::cout<<"current object: "<<object.getClassName()<<std::endl;
-            if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),i)!=trainObjectsIds.end())
-                continue;
-            testObjects.push_back(object);
-            std::cout<<"testObjects size: "<<testObjects.size()<<std::endl;
-        }
-        for (Object object : trainingObjects){
-            if (object.compareName("Acer"))
-                classAObjects.push_back(object);
-            else if (object.compareName("Quercus"))
-                classBObjects.push_back(object);
-        }
-        classAObjectsCount=classAObjects.size();
-        classBObjectsCount=classBObjects.size();
-        return true;
-    }
 
+    if (method.compare("Standart")==0){
+        if (ceil(objects.size()*trainingPartPercent)<objects.size()){
+            noTrainingObjects=objects.size()*trainingPartPercent;
+            while(trainingObjects.size()<noTrainingObjects){
+                unsigned int currentObjectId=rand()%noObjects;
+                if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),currentObjectId)!=trainObjectsIds.end())
+                    continue;
+                trainingObjects.push_back(objects.at(currentObjectId));
+                trainObjectsIds.push_back(currentObjectId);
+            }
+            noTestObjects=objects.size()-noTrainingObjects;
+            std::cout<<"objects size: "<<objects.size()<<std::endl;
+            for (int i=0;i<objects.size();i++){
+                Object object=objects.at(i);
+                std::cout<<"current object: "<<object.getClassName()<<std::endl;
+                if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),i)!=trainObjectsIds.end())
+                    continue;
+                testObjects.push_back(object);
+                std::cout<<"testObjects size: "<<testObjects.size()<<std::endl;
+            }
+            for (Object object : trainingObjects){
+                if (object.compareName("Acer"))
+                    classAObjects.push_back(object);
+                else if (object.compareName("Quercus"))
+                    classBObjects.push_back(object);
+            }
+            classAObjectsCount=classAObjects.size();
+            classBObjectsCount=classBObjects.size();
+            return true;
+        }
+
+        return false;
+    } else if (method.compare("Bootstrap")==0){
+        int trainingPart=(int)(trainingPartPercent*100);
+        if(trainingPart<noObjects && trainingPart>0){
+            std::vector<int> bootstrapObjectsIds;
+            for (int i=0;i<trainingPart;i++){
+                int currentIndex=rand()%noObjects;
+                bootstrapObjectsIds.push_back(currentIndex);                 \
+            }
+            for (int bootstrapObjectId : bootstrapObjectsIds){
+                if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),bootstrapObjectId)==trainObjectsIds.end()){
+                    Object bootstrapObject=objects.at(bootstrapObjectId);
+                    trainingObjects.push_back(bootstrapObject);
+                    trainObjectsIds.push_back(bootstrapObjectId);
+                }
+            }
+            for (int i=0;i<noObjects;i++){
+                if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),i)==trainObjectsIds.end()){
+                    Object testObject=objects.at(i);
+                    testObjects.push_back(testObject);
+                }
+            }
+            for (Object object : trainingObjects){
+                if (object.compareName("Acer"))
+                    classAObjects.push_back(object);
+                else if (object.compareName("Quercus"))
+                    classBObjects.push_back(object);
+            }
+            classAObjectsCount=classAObjects.size();
+            classBObjectsCount=classBObjects.size();
+            noTrainingObjects=trainingObjects.size();
+            noTestObjects=testObjects.size();
+            return true;
+        }
+        return false;
+    } else if (method.compare("Cross validation")){
+
+    }
     return false;
 
 }

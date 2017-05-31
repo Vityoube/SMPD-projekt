@@ -544,6 +544,7 @@ void MainWindow::on_CpushButtonOpenFile_clicked()
     ui->CtextBrowser->append("noObjects: "  +  QString::number(database.getNoObjects()));
     ui->CtextBrowser->append("noFeatures: "  +  QString::number(database.getNoFeatures()));
     ui->CpushButtonTrain->setEnabled(true);
+    ui->CcomboBoxValidation->setEnabled(true);
     ui->CpushButtonSaveFile->setEnabled(true);
     ui->CpushButtonExecute->setEnabled(false);
     ui->CcomboBoxClassifiers->clear();
@@ -564,7 +565,7 @@ void MainWindow::on_CpushButtonTrain_clicked()
         errorMessage.setText("Please enter training part percentage!");
         errorMessage.exec();
     }
-    else if(database.trainObjects(ui->CTrainPartLineEdit->text().toDouble()/100)){
+    else if(database.trainObjects(ui->CTrainPartLineEdit->text().toDouble()/100,ui->CcomboBoxValidation->currentText().toStdString())){
         ui->CtextBrowser->clear();
         ui->CcomboBoxClassifiers->clear();
         ui->CcomboBoxK->clear();
