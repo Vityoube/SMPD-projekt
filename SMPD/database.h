@@ -37,8 +37,22 @@ private:
 
     std::vector<Object> classAObjects;
     std::vector<Object> classBObjects;
+
+    std::vector<Object> classA;
+    std::vector<Object> classB;
+
+    std::vector<std::map<std::string, std::vector<Object>>> classesGroups;
+
+    int classACount;
+    int classBCount;
+
     int classAObjectsCount;
     int classBObjectsCount;
+
+    std::string currentTrainingMethod;
+
+    std::vector<std::vector<Object>> trainingGroups;
+    std::vector<std::vector<Object>> testGroups;
 
     unsigned int noClass;
     unsigned int noObjects;
@@ -92,6 +106,25 @@ public:
 
     Object getObjectByIndex(int index);
     void setClassBObjectsCount(int value);
+    std::vector<std::vector<Object> > getTestGroups() const;
+    void setTestGroups(const std::vector<std::vector<Object> > &value);
+    std::vector<std::vector<Object> > getTrainingGroups() const;
+    void setTrainingGroups(const std::vector<std::vector<Object> > &value);
+    std::string getCurrentTrainingMethod() const;
+    void setCurrentTrainingMethod(const std::string &value);
+    int getClassACount() const;
+    void setClassACount(int value);
+    int getClassBCount() const;
+    void setClassBCount(int value);
+    std::vector<Object> getClassA() const;
+    void setClassA(const std::vector<Object> &value);
+    std::vector<Object> getClassB() const;
+    void setClassB(const std::vector<Object> &value);
+
+    std::vector<Object> getTestGroup(int index);
+    std::vector<Object> getTrainingGroup(int index);
+    std::vector<std::map<std::string, std::vector<Object> > > getClassesGroups() const;
+    void setClassesGroups(const std::vector<std::map<std::string, std::vector<Object> > > &value);
 };
 
 

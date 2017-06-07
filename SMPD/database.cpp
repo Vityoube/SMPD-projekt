@@ -90,6 +90,96 @@ void Database::setClassBObjectsCount(int value)
     classBObjectsCount = value;
 }
 
+std::vector<std::vector<Object> > Database::getTestGroups() const
+{
+    return testGroups;
+}
+
+void Database::setTestGroups(const std::vector<std::vector<Object> > &value)
+{
+    testGroups = value;
+}
+
+std::vector<std::vector<Object> > Database::getTrainingGroups() const
+{
+    return trainingGroups;
+}
+
+void Database::setTrainingGroups(const std::vector<std::vector<Object> > &value)
+{
+    trainingGroups = value;
+}
+
+std::string Database::getCurrentTrainingMethod() const
+{
+    return currentTrainingMethod;
+}
+
+void Database::setCurrentTrainingMethod(const std::string &value)
+{
+    currentTrainingMethod = value;
+}
+
+int Database::getClassACount() const
+{
+    return classACount;
+}
+
+void Database::setClassACount(int value)
+{
+    classACount = value;
+}
+
+int Database::getClassBCount() const
+{
+    return classBCount;
+}
+
+void Database::setClassBCount(int value)
+{
+    classBCount = value;
+}
+
+std::vector<Object> Database::getClassA() const
+{
+    return classA;
+}
+
+void Database::setClassA(const std::vector<Object> &value)
+{
+    classA = value;
+}
+
+std::vector<Object> Database::getClassB() const
+{
+    return classB;
+}
+
+void Database::setClassB(const std::vector<Object> &value)
+{
+    classB = value;
+}
+
+std::vector<Object> Database::getTestGroup(int index)
+{
+    return testGroups.at(index);
+}
+
+std::vector<Object> Database::getTrainingGroup(int index)
+{
+    return trainingGroups.at(index);
+}
+
+std::vector<std::map<std::string, std::vector<Object> > > Database::getClassesGroups() const
+{
+    return classesGroups;
+}
+
+void Database::setClassesGroups(const std::vector<std::map<std::string, std::vector<Object> > > &value)
+{
+    classesGroups = value;
+}
+
 Database::Database() : noClass(0), noObjects(0), noFeatures(0)
 {
 }
@@ -103,7 +193,10 @@ bool Database::addObject(const Object &object)
 
     objects.push_back(object);
     ++noObjects;
-
+    if (object.getClassName().compare("Acer")==0)
+        classA.push_back(object);
+    else if (object.getClassName().compare("Quercus")==0)
+        classB.push_back(object);
     if (classCounters[object.getClassName()]++ == 0)
         classNamesVector.push_back(object.getClassName());
 
@@ -201,6 +294,8 @@ bool Database::load(const std::string &fileName)
 
     }
     file.close(); // logowanie poprawnego wczytania do bazy
+    classACount=classA.size();
+    classBCount=classB.size();
     return true;
 }
 
@@ -236,13 +331,19 @@ void Database::save(const std::string &fileName)
 
 bool Database::trainObjects(double trainingPartPercent,std::string method)
 {
-    testObjects.clear();
-    trainingObjects.clear();
-    trainObjectsIds.clear();
-
-    if (method.compare("Standart")==0){
+//    testObjects.clear();
+//    trainingObjects.clear();
+//    trainObjectsIds.clear();
+    classesGroups.clear();
+    testGroups.clear();
+    trainingGroups.clear();
+    currentTrainingMethod=method;
+    if (currentTrainingMethod.compare("Standart")==0){
         if (ceil(objects.size()*trainingPartPercent)<objects.size()){
-            noTrainingObjects=objects.size()*trainingPartPercent;
+            std::vector<Object> trainingObjects;
+            std::vector<Object> testObjects;
+            std::vector<int> trainObjectsIds;
+            int noTrainingObjects=objects.size()*trainingPartPercent;
             while(trainingObjects.size()<noTrainingObjects){
                 unsigned int currentObjectId=rand()%noObjects;
                 if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),currentObjectId)!=trainObjectsIds.end())
@@ -250,7 +351,7 @@ bool Database::trainObjects(double trainingPartPercent,std::string method)
                 trainingObjects.push_back(objects.at(currentObjectId));
                 trainObjectsIds.push_back(currentObjectId);
             }
-            noTestObjects=objects.size()-noTrainingObjects;
+            int noTestObjects=objects.size()-noTrainingObjects;
             std::cout<<"objects size: "<<objects.size()<<std::endl;
             for (int i=0;i<objects.size();i++){
                 Object object=objects.at(i);
@@ -260,274 +361,294 @@ bool Database::trainObjects(double trainingPartPercent,std::string method)
                 testObjects.push_back(object);
                 std::cout<<"testObjects size: "<<testObjects.size()<<std::endl;
             }
-            for (Object object : trainingObjects){
-                if (object.compareName("Acer"))
-                    classAObjects.push_back(object);
-                else if (object.compareName("Quercus"))
-                    classBObjects.push_back(object);
-            }
-            classAObjectsCount=classAObjects.size();
-            classBObjectsCount=classBObjects.size();
-            return true;
-        }
+            trainingGroups.push_back(trainingObjects);
+            testGroups.push_back(testObjects);
 
-        return false;
+        } else {
+            return false;
+        }
     } else if (method.compare("Bootstrap")==0){
         int trainingPart=(int)(trainingPartPercent*100);
-        if(trainingPart<noObjects && trainingPart>0){
-            std::vector<int> bootstrapObjectsIds;
-            for (int i=0;i<trainingPart;i++){
-                int currentIndex=rand()%noObjects;
-                bootstrapObjectsIds.push_back(currentIndex);                 \
-            }
-            for (int bootstrapObjectId : bootstrapObjectsIds){
-                if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),bootstrapObjectId)==trainObjectsIds.end()){
-                    Object bootstrapObject=objects.at(bootstrapObjectId);
-                    trainingObjects.push_back(bootstrapObject);
-                    trainObjectsIds.push_back(bootstrapObjectId);
+        if(trainingPart<noObjects && trainingPart>0){            
+            for (int currentGroup=0;currentGroup<trainingPart;currentGroup++){
+                std::vector<int> bootstrapObjectsIds;
+                std::vector<Object> currentTrainingGroup;
+                std::vector<Object> currentTestGroup;
+                std::vector<int> currentTrainingObjectsIds;
+                for (int i=0;i<trainingPart;i++){
+                    int currentIndex=rand()%noObjects;
+                    bootstrapObjectsIds.push_back(currentIndex);                 \
                 }
-            }
-            for (int i=0;i<noObjects;i++){
-                if (std::find(trainObjectsIds.begin(),trainObjectsIds.end(),i)==trainObjectsIds.end()){
-                    Object testObject=objects.at(i);
-                    testObjects.push_back(testObject);
+                for (int bootstrapObjectId : bootstrapObjectsIds){
+                    if (std::find(currentTrainingObjectsIds.begin(),currentTrainingObjectsIds.end(),bootstrapObjectId)==currentTrainingObjectsIds.end()){
+                        Object bootstrapObject=objects.at(bootstrapObjectId);
+                        currentTrainingGroup.push_back(bootstrapObject);
+                        currentTrainingObjectsIds.push_back(bootstrapObjectId);
+                    }
                 }
+                for (int i=0;i<noObjects;i++){
+                    if (std::find(currentTrainingObjectsIds.begin(),currentTrainingObjectsIds.end(),i)==currentTrainingObjectsIds.end()){
+                        Object testObject=objects.at(i);
+                        currentTestGroup.push_back(testObject);
+                    }
+                }
+                trainingGroups.push_back(currentTrainingGroup);
+                testGroups.push_back(currentTestGroup);
+                std::cout<<"Training groups count: "<<trainingGroups.size()<<std::endl;
+                std::cout<<"Test groups count: "<<testGroups.size()<<std::endl;
             }
-            for (Object object : trainingObjects){
-                if (object.compareName("Acer"))
-                    classAObjects.push_back(object);
-                else if (object.compareName("Quercus"))
-                    classBObjects.push_back(object);
-            }
-            classAObjectsCount=classAObjects.size();
-            classBObjectsCount=classBObjects.size();
-            noTrainingObjects=trainingObjects.size();
-            noTestObjects=testObjects.size();
-            return true;
+        } else {
+            return false;
         }
-        return false;
     } else if (method.compare("Cross validation")){
-
+        int trainingPartsCount=(int)(trainingPartPercent*100);
+        std::cout<<"Parts count: "<<trainingPartsCount<<std::endl;
+        std::vector<std::vector<Object>> objectsGroups;
+        if (trainingPartsCount<noObjects && trainingPartsCount>0){
+            int lastPartBegin=0;
+            for (int currentPartBegin=0;currentPartBegin<noObjects-(noObjects/(trainingPartsCount-1));
+                 currentPartBegin+=(int)(noObjects/trainingPartsCount)){
+//                std::cout<<"Current part begin index: "<<currentPartBegin<<std::endl;
+                int currentPartEnd=currentPartBegin+(int)(noObjects/trainingPartsCount);
+                if (currentPartEnd>noObjects)
+                    currentPartEnd=noObjects;
+                std::vector<Object> currentGroup;
+                for (int i=currentPartBegin;i<currentPartEnd;i++){
+                    currentGroup.push_back(objects.at(i));
+                }
+//                std::cout<<"Current group size: "<<currentGroup.size()<<std::endl;
+//                std::cout<<"Current end index: "<<currentPartEnd<<std::endl;
+                objectsGroups.push_back(currentGroup);
+                lastPartBegin=currentPartEnd;
+//                std::cout<<"current Group Size: "<<currentGroup.size()<<std::endl;
+//                std::cout<<"groups count: "<<objectsGroups.size()<<std::endl;
+            }
+            std::vector<Object> lastPartGroup;
+            for (int i=lastPartBegin;i<noObjects;i++){
+                lastPartGroup.push_back(objects.at(i));
+            }
+            objectsGroups.push_back(lastPartGroup);
+            std::vector<Object> trainingGroup;
+            for (int i=0;i<objectsGroups.size();i++){
+                std::vector<Object> currentGroup=objectsGroups.at(i);
+//                std::cout<<"Current test group size: "<<currentGroup.size()<<std::endl;
+                testGroups.push_back(currentGroup);
+                for (int j=0;j<objectsGroups.size();j++){
+                    if (j!=i){
+                        std::vector<Object> currentTrainingGroup=objectsGroups.at(j);
+                        for (Object currentTrainingObject : currentTrainingGroup){
+                            trainingGroup.push_back(currentTrainingObject);
+                        }
+                    }
+                }
+//                std::cout<<"Current training group size: "<<trainingGroup.size()<<std::endl;
+                trainingGroups.push_back(trainingGroup);
+                trainingGroup.clear();
+//                std::cout<<"Training groups count: "<<trainingGroups.size()<<std::endl;
+//                std::cout<<"Test groups count: "<<testGroups.size()<<std::endl;
+            }
+        } else {
+            return false;
+        }
     }
-    return false;
+
+    for (std::vector<Object> currentTrainingGroup : trainingGroups){
+        std::map<std::string,std::vector<Object>> currentClassesGroup;
+        std::vector<Object> classA, classB;
+        for (Object currentTrainingObject : currentTrainingGroup){
+            if (currentTrainingObject.compareName("Acer"))
+                classA.push_back(currentTrainingObject);
+            else if (currentTrainingObject.compareName("Quercus"))
+               classB.push_back(currentTrainingObject);
+        }
+        currentClassesGroup.insert(std::pair<std::string,std::vector<Object>>("A",classA));
+        currentClassesGroup.insert(std::pair<std::string,std::vector<Object>>("B",classB));
+        classesGroups.push_back(currentClassesGroup);
+    }
+    return true;
 
 }
 
 double Database::classifyNN()
 {
-    nearestNeighborsClassNamesForTestObjects.clear();
     std::vector<int> nearestNeighborsForTestObjectIds;
-    double probability=0.0;
+    double finalProbability=0.0;
+    std::vector<double> probabilities;
     std::cout<<"Before main loop. trainingObjects size: "<<trainingObjects.size()<<std::endl;
-    for (Object testObject : testObjects){
-        std::cout<<"In main loop"<<std::endl;
-        float minDistance=99999.9f;        
-        for (int i=0;i<k;i++){
-            int nearestNeighborsForTestObjectId=10000;
-            for (int z=0;z<trainingObjects.size();z++){
-                Object trainingObject=trainingObjects.at(i);
-                float distanceToTrainingObject=0.0f;
-                unsigned int featuresNumber=trainingObject.getFeaturesNumber();
-                for (unsigned int j=0;j<featuresNumber;j++){
-                    distanceToTrainingObject+=((trainingObject.getFeature(j)-testObject.getFeature(j))*
-                            (trainingObject.getFeature(j)-testObject.getFeature(j)));
+    for (int currentGroup=0;currentGroup<testGroups.size();currentGroup++){
+        std::vector<Object> currentTestObjects=testGroups.at(currentGroup);
+        std::vector<Object> currentTrainingObjects=trainingGroups.at(currentGroup);
+        nearestNeighborsClassNamesForTestObjects.clear();
+        double probability=0.0;
+        for (Object testObject : currentTestObjects){
+            std::cout<<"In main loop"<<std::endl;
+            float minDistance=99999.9f;
+            for (int i=0;i<k;i++){
+                int nearestNeighborsForTestObjectId=10000;
+                for (int z=0;z<currentTrainingObjects.size();z++){
+                    Object trainingObject=currentTrainingObjects.at(z);
+                    float distanceToTrainingObject=0.0f;
+                    unsigned int featuresNumber=trainingObject.getFeaturesNumber();
+                    for (unsigned int j=0;j<featuresNumber;j++){
+                        distanceToTrainingObject+=((trainingObject.getFeature(j)-testObject.getFeature(j))*
+                                (trainingObject.getFeature(j)-testObject.getFeature(j)));
+                    }
+                    distanceToTrainingObject=sqrt(distanceToTrainingObject);
+                    if (std::find(nearestNeighborsForTestObjectIds.begin(),nearestNeighborsForTestObjectIds.end(),z)!=nearestNeighborsForTestObjectIds.end()){
+                        std::cout<<"Found object already in neighbors list"<<std::endl;
+                        continue;
+                    }
+                    if (minDistance>=distanceToTrainingObject){
+                        minDistance=distanceToTrainingObject;
+                        currentNearestNeighbor=trainingObject;
+                        nearestNeighborsForTestObjectId=z;
+                        std::cout<<"Found nearest neighbor: "<<currentNearestNeighbor.getClassName()<<std::endl;
+                    }
                 }
-                distanceToTrainingObject=sqrt(distanceToTrainingObject);
-                if (std::find(nearestNeighborsForTestObjectIds.begin(),nearestNeighborsForTestObjectIds.end(),z)!=nearestNeighborsForTestObjectIds.end()){
-                    std::cout<<"Found object already in neighbors list"<<std::endl;
-                    continue;
+                nearestNeighborsForTestObject.push_back(currentNearestNeighbor);
+                if (nearestNeighborsForTestObjectId!=10000)
+                    nearestNeighborsForTestObjectIds.push_back(nearestNeighborsForTestObjectId);
+            }
+            int nearestNeighborsFromClassAForTestObjectCount=0;
+            int nearestNeighborsFromClassBForTestObjectCount=0;
+            for (Object neighborForTestObject: nearestNeighborsForTestObject){
+                if (neighborForTestObject.getClassNameMutable().compare("Acer")==0){
+                    nearestNeighborsFromClassAForTestObjectCount++;
+                    std::cout<<"Found acer object: "<<neighborForTestObject.getClassName()<<std::endl;
                 }
-                if (minDistance>=distanceToTrainingObject){
-                    minDistance=distanceToTrainingObject;
-                    currentNearestNeighbor=trainingObject;
-                    nearestNeighborsForTestObjectId=z;
-                    std::cout<<"Found nearest neighbor: "<<currentNearestNeighbor.getClassName()<<std::endl;
+                else if (neighborForTestObject.getClassNameMutable().compare("Quercus")==0){
+                    nearestNeighborsFromClassBForTestObjectCount++;
+                    std::cout<<"Found quercus object: "<<neighborForTestObject.getClassName()<<std::endl;
                 }
             }
-            nearestNeighborsForTestObject.push_back(currentNearestNeighbor);
-            if (nearestNeighborsForTestObjectId!=10000)
-                nearestNeighborsForTestObjectIds.push_back(nearestNeighborsForTestObjectId);
-        }
-        int nearestNeighborsFromClassAForTestObjectCount=0;
-        int nearestNeighborsFromClassBForTestObjectCount=0;
-        for (Object neighborForTestObject: nearestNeighborsForTestObject){
-            if (neighborForTestObject.getClassNameMutable().compare("Acer")==0){
-                nearestNeighborsFromClassAForTestObjectCount++;
-                std::cout<<"Found acer object: "<<neighborForTestObject.getClassName()<<std::endl;
-            }
-            else if (neighborForTestObject.getClassNameMutable().compare("Quercus")==0){
-                nearestNeighborsFromClassBForTestObjectCount++;
-                std::cout<<"Found quercus object: "<<neighborForTestObject.getClassName()<<std::endl;
-            }
-        }
-        if (nearestNeighborsFromClassAForTestObjectCount>nearestNeighborsFromClassBForTestObjectCount)
-            nearestNeighborsClassNamesForTestObjects.push_back("Acer");
-        else if (nearestNeighborsFromClassAForTestObjectCount<nearestNeighborsFromClassBForTestObjectCount)
-            nearestNeighborsClassNamesForTestObjects.push_back("Quercus");
-        nearestNeighborsForTestObject.clear();
+            if (nearestNeighborsFromClassAForTestObjectCount>nearestNeighborsFromClassBForTestObjectCount)
+                nearestNeighborsClassNamesForTestObjects.push_back("Acer");
+            else if (nearestNeighborsFromClassAForTestObjectCount<nearestNeighborsFromClassBForTestObjectCount)
+                nearestNeighborsClassNamesForTestObjects.push_back("Quercus");
+            nearestNeighborsForTestObject.clear();
 
+        }
+        int correctObjectsCount=0;
+        for (unsigned int i=0;i<nearestNeighborsClassNamesForTestObjects.size();i++){
+            if (currentTestObjects.at(i).getClassNameMutable().compare(nearestNeighborsClassNamesForTestObjects.at(i))==0)
+                correctObjectsCount++;
+        }
+        probability=(double)correctObjectsCount/(double)currentTestObjects.size();
+        std::cout<<"Current propability: "<<probability<<std::endl;
+        probabilities.push_back(probability);
     }
-    int correctObjectsCount=0;
-    for (unsigned int i=0;i<nearestNeighborsClassNamesForTestObjects.size();i++){
-        if (testObjects.at(i).getClassNameMutable().compare(nearestNeighborsClassNamesForTestObjects.at(i))==0)
-            correctObjectsCount++;
+    for (double probability : probabilities){
+        finalProbability+=probability;
     }
-    probability=(double)correctObjectsCount/(double)noTestObjects;
-    return probability*100;
+    finalProbability/=(double)probabilities.size();
+    return finalProbability*100;
 }
 
 double Database::classifyNM()
 {
-    nearestMeansClassNamesForTestObjects.clear();
-    groupsForAClass.clear();
-    groupsForBClass.clear();
-    meansForAClassGroups.clear();
-    meansForBClassGroups.clear();
-    double probability=0.0;
+    double finalProbability=0.0;
     if (k==1){
-        Object classAMean;
-        Object classBMean;
-        classAMean.setClassName("Acer");
-        classBMean.setClassName("Quercus");
-        for (int i=0; i<noFeatures;i++){
-            classAMean.addFeature(0.0f);
-            classBMean.addFeature(0.0f);
-        }
-        for (int i=0; i<noFeatures;i++){
-            int classAElementsCount=0, classBElementsCount=0;
-            for (Object trainingObject : trainingObjects){
-                if (trainingObject.compareName("Acer")==0){
-                    classAMean.setFeature(i,classAMean.getFeature(i)+trainingObject.getFeature(i));
-                    classAElementsCount++;
-                } else if (trainingObject.compareName("Quercus")==0){
-                    classBMean.setFeature(i,classBMean.getFeature(i)+trainingObject.getFeature(i));
-                    classBElementsCount++;
-                }
-                classAMean.setFeature(i,classAMean.getFeature(i)/classAElementsCount);
-                classBMean.setFeature(i,classBMean.getFeature(i)/classBElementsCount);
-            }
-        }
-        for (Object testObject : testObjects){
-            float distanceToClassA,distanceToClassB;
+        std::vector<double> probabilities;
+        for (int currentGroup=0;currentGroup<testGroups.size();currentGroup++){
+            nearestMeansClassNamesForTestObjects.clear();
+            std::vector<Object> currentTestObjects=testGroups.at(currentGroup);
+            std::vector<Object> currentTrainingObjects=trainingGroups.at(currentGroup);
+            double probability=0.0;
+            Object classAMean;
+            Object classBMean;
+            classAMean.setClassName("Acer");
+            classBMean.setClassName("Quercus");
             for (int i=0; i<noFeatures;i++){
-               distanceToClassA+=(testObject.getFeature(i)-classAMean.getFeature(i))*(testObject.getFeature(i)-classAMean.getFeature(i));
-               distanceToClassB+=(testObject.getFeature(i)-classBMean.getFeature(i))*(testObject.getFeature(i)-classBMean.getFeature(i));
+                classAMean.addFeature(0.0f);
+                classBMean.addFeature(0.0f);
+                int classAElementsCount=0, classBElementsCount=0;
+                for (Object trainingObject : currentTrainingObjects){
+                    if (trainingObject.compareName("Acer")==0){
+                        classAMean.setFeature(i,classAMean.getFeature(i)+trainingObject.getFeature(i));
+                        classAElementsCount++;
+                    } else if (trainingObject.compareName("Quercus")==0){
+                        classBMean.setFeature(i,classBMean.getFeature(i)+trainingObject.getFeature(i));
+                        classBElementsCount++;
+                    }
+                    classAMean.setFeature(i,classAMean.getFeature(i)/classAElementsCount);
+                    classBMean.setFeature(i,classBMean.getFeature(i)/classBElementsCount);
+                }
             }
-            distanceToClassA=sqrt(distanceToClassA);
-            distanceToClassB=sqrt(distanceToClassB);
-//            std::vector<Object>nearestMeansForTestObject;
-            if (distanceToClassA<distanceToClassB){
-//                nearestMeansForTestObject.push_back(classAMean);
-                nearestMeansClassNamesForTestObjects.push_back(classAMean.getClassName());
+            std::cout<<"Calculating distance from test objects"<<std::endl;
+            for (Object testObject : currentTestObjects){
+                float distanceToClassA=0.0,distanceToClassB=0.0;
+                for (int i=0; i<noFeatures;i++){
+                   distanceToClassA+=(testObject.getFeature(i)-classAMean.getFeature(i))*(testObject.getFeature(i)-classAMean.getFeature(i));
+                   distanceToClassB+=(testObject.getFeature(i)-classBMean.getFeature(i))*(testObject.getFeature(i)-classBMean.getFeature(i));
+                }
+                distanceToClassA=sqrt(distanceToClassA);
+                distanceToClassB=sqrt(distanceToClassB);
+    //            std::vector<Object>nearestMeansForTestObject;
+                if (distanceToClassA<distanceToClassB){
+    //                nearestMeansForTestObject.push_back(classAMean);
+                    nearestMeansClassNamesForTestObjects.push_back(classAMean.getClassName());
+                }
+                else {
+    //                nearestMeansForTestObject.push_back(classBMean);
+                    nearestMeansClassNamesForTestObjects.push_back(classBMean.getClassName());
+                }
             }
-            else {
-//                nearestMeansForTestObject.push_back(classBMean);
-                nearestMeansClassNamesForTestObjects.push_back(classBMean.getClassName());
+            int correctObjectsCount=0;
+            for (int i=0;i<nearestMeansClassNamesForTestObjects.size();i++){
+                if (currentTestObjects.at(i).compareName(nearestMeansClassNamesForTestObjects.at(i)))
+                    correctObjectsCount++;
             }
+            probability=(double)correctObjectsCount/(double)currentTestObjects.size();
+            probabilities.push_back(probability);
+
         }
-        int correctObjectsCount=0;
-        for (int i=0;i<nearestMeansClassNamesForTestObjects.size();i++){
-            if (testObjects.at(i).compareName(nearestMeansClassNamesForTestObjects.at(i)))
-                correctObjectsCount++;
+        for (double probability : probabilities){
+            finalProbability+=probability;
         }
-        probability=(double)correctObjectsCount/(double)noTestObjects;
+        finalProbability/=(double)probabilities.size();
     } else {
-        std::vector<int> currentChoicesIndexesForA;
-        for (int i=0;i<k;i++){
-            int currentChoiceIndex=rand()%classAObjects.size();
-            if (std::find(currentChoicesIndexesForA.begin(),currentChoicesIndexesForA.end(),currentChoiceIndex)==currentChoicesIndexesForA.end()){
-                Object currentMean=classAObjects.at(currentChoiceIndex);
-                meansForAClassGroups.push_back(currentMean);
-                currentChoicesIndexesForA.push_back(currentChoiceIndex);
-            }
-        }
-        std::vector<int> currentChoicesIndexesForB;
-        for (int i=0;i<k;i++){
-            int currentChoiceIndex=rand()%classBObjects.size();
-            if (std::find(currentChoicesIndexesForB.begin(),currentChoicesIndexesForB.end(),currentChoiceIndex)==currentChoicesIndexesForB.end()){
-                Object currentMean=classBObjects.at(currentChoiceIndex);
-                meansForBClassGroups.push_back(currentMean);
-                currentChoicesIndexesForB.push_back(currentChoiceIndex);
-            }
-        }
-        for (int i=0;i<k;i++){
-            groupsForAClass.insert(std::pair<int,std::vector<Object>>(i,std::vector<Object>()));
-            groupsForBClass.insert(std::pair<int,std::vector<Object>>(i,std::vector<Object>()));
-        }
-        int meansCalculateCount=10;
-        for(int i=0; i<classAObjectsCount;i++){
-            if (std::find(currentChoicesIndexesForA.begin(),currentChoicesIndexesForA.end(),i)!=currentChoicesIndexesForA.end())
-                continue;
-            float minDistanceFromClassAObjectToMean=99999999999.9f;
-            Object currentClassAObject=classAObjects.at(i);
-            int groupForCurrentClassObject=0;
-            for (int j=0; j<meansForAClassGroups.size();j++){
-                Object currentMean=meansForAClassGroups.at(j);
-                float distanceFromObjectAToMean=0.0f;
-                for (int featureNo=0; featureNo<noFeatures;featureNo++){
-                    distanceFromObjectAToMean+=(currentClassAObject.getFeature(featureNo)-currentMean.getFeature(featureNo))*
-                            (currentClassAObject.getFeature(featureNo)-currentMean.getFeature(featureNo));
-                }
-                distanceFromObjectAToMean=(float)sqrt((double)distanceFromObjectAToMean)/(float)noFeatures;
-                if (distanceFromObjectAToMean<=minDistanceFromClassAObjectToMean){
-                    minDistanceFromClassAObjectToMean=distanceFromObjectAToMean;
-                    groupForCurrentClassObject=j;
+        std::vector<double> probabilities;
+        for (int currentGroup=0;currentGroup<testGroups.size();currentGroup++){
+            double probability=0.0;
+            meansForAClassGroups.clear();
+            meansForBClassGroups.clear();
+            groupsForAClass.clear();
+            groupsForBClass.clear();
+            nearestMeansClassNamesForTestObjects.clear();
+            std::map<std::string,std::vector<Object>> classes=classesGroups.at(currentGroup);
+            std::vector<Object> classAObjects=classes.at("A");
+            std::vector<Object> classBObjects=classes.at("B");
+            std::vector<Object> currentTestObjects=testGroups.at(currentGroup);
+            int classAObjectsCount=classAObjects.size(), classBObjectsCount=classBObjects.size();
+            std::vector<int> currentChoicesIndexesForA;
+            for (int i=0;i<k;i++){
+                int currentChoiceIndex=rand()%classAObjects.size();
+                if (std::find(currentChoicesIndexesForA.begin(),currentChoicesIndexesForA.end(),currentChoiceIndex)==currentChoicesIndexesForA.end()){
+                    Object currentMean=classAObjects.at(currentChoiceIndex);
+                    meansForAClassGroups.push_back(currentMean);
+                    currentChoicesIndexesForA.push_back(currentChoiceIndex);
                 }
             }
-            std::vector<Object> nearestGroupForClassAObject=groupsForAClass[groupForCurrentClassObject];
-            nearestGroupForClassAObject.push_back(currentClassAObject);
-            groupsForAClass[groupForCurrentClassObject]=nearestGroupForClassAObject;
-        }
-        for(int i=0; i<classBObjectsCount;i++){
-            if (std::find(currentChoicesIndexesForB.begin(),currentChoicesIndexesForB.end(),i)!=currentChoicesIndexesForB.end())
-                continue;
-            float minDistanceFromClassBObjectToMean=99999999999.9f;
-            Object currentClassBObject=classBObjects.at(i);
-            int groupForCurrentClassObject=0;
-            for (int j=0; j<meansForBClassGroups.size();j++){
-                Object currentMean=meansForBClassGroups.at(j);
-                float distanceFromObjectBToMean=0.0f;
-                for (int featureNo=0; featureNo<noFeatures;featureNo++){
-                    distanceFromObjectBToMean+=(currentClassBObject.getFeature(featureNo)-currentMean.getFeature(featureNo))*
-                            (currentClassBObject.getFeature(featureNo)-currentMean.getFeature(featureNo));
-                }
-                distanceFromObjectBToMean=(float)sqrt((double)distanceFromObjectBToMean)/(float)noFeatures;
-                if (distanceFromObjectBToMean<=minDistanceFromClassBObjectToMean){
-                    minDistanceFromClassBObjectToMean=distanceFromObjectBToMean;
-                    groupForCurrentClassObject=j;
+            std::vector<int> currentChoicesIndexesForB;
+            for (int i=0;i<k;i++){
+                int currentChoiceIndex=rand()%classBObjects.size();
+                if (std::find(currentChoicesIndexesForB.begin(),currentChoicesIndexesForB.end(),currentChoiceIndex)==currentChoicesIndexesForB.end()){
+                    Object currentMean=classBObjects.at(currentChoiceIndex);
+                    meansForBClassGroups.push_back(currentMean);
+                    currentChoicesIndexesForB.push_back(currentChoiceIndex);
                 }
             }
-            std::vector<Object> nearestGroupForClassBObject=groupsForBClass[groupForCurrentClassObject];
-            nearestGroupForClassBObject.push_back(currentClassBObject);
-            groupsForBClass[groupForCurrentClassObject]=nearestGroupForClassBObject;
-        }
-        for (int currentGroupIndex=0;currentGroupIndex<meansForAClassGroups.size();currentGroupIndex++){
-            Object currentMean=meansForAClassGroups.at(currentGroupIndex);
-            for (int currentFeature=0; currentFeature<noFeatures;currentFeature++){
-                    std::vector<Object> elementsFromClassAGroup=groupsForAClass.at(currentGroupIndex);
-                    float currentFeatureValue=0.0f;
-                    for (Object currentObjectFromGroup : elementsFromClassAGroup)
-                        currentFeatureValue+=currentObjectFromGroup.getFeature(currentFeature);
-                    currentFeatureValue/=elementsFromClassAGroup.size();
-                    currentMean.setFeature(currentFeature,currentFeatureValue);
-                }
+            for (int i=0;i<k;i++){
+                groupsForAClass.insert(std::pair<int,std::vector<Object>>(i,std::vector<Object>()));
+                groupsForBClass.insert(std::pair<int,std::vector<Object>>(i,std::vector<Object>()));
             }
-        for (int currentGroupIndex=0;currentGroupIndex<meansForBClassGroups.size();currentGroupIndex++){
-            Object currentMean=meansForBClassGroups.at(currentGroupIndex);
-            for (int currentFeature=0; currentFeature<noFeatures;currentFeature++){
-                    std::vector<Object> elementsFromClassBGroup=groupsForBClass.at(currentGroupIndex);
-                    float currentFeatureValue=0.0f;
-                    for (Object currentObjectFromGroup : elementsFromClassBGroup)
-                        currentFeatureValue+=currentObjectFromGroup.getFeature(currentFeature);
-                    currentFeatureValue/=elementsFromClassBGroup.size();
-                    currentMean.setFeature(currentFeature,currentFeatureValue);
-            }
-         }
-        for (int currentStep=1;currentStep<meansCalculateCount;currentStep++){
 
-
-            for(Object currentClassAObject : classAObjects){
+            int meansCalculateCount=10;
+            for(int i=0; i<classAObjectsCount;i++){
+                if (std::find(currentChoicesIndexesForA.begin(),currentChoicesIndexesForA.end(),i)!=currentChoicesIndexesForA.end())
+                    continue;
                 float minDistanceFromClassAObjectToMean=99999999999.9f;
+                Object currentClassAObject=classAObjects.at(i);
                 int groupForCurrentClassObject=0;
                 for (int j=0; j<meansForAClassGroups.size();j++){
                     Object currentMean=meansForAClassGroups.at(j);
@@ -542,12 +663,15 @@ double Database::classifyNM()
                         groupForCurrentClassObject=j;
                     }
                 }
-                std::vector<Object>nearestGroupForClassAObject=groupsForAClass[groupForCurrentClassObject];
+                std::vector<Object> nearestGroupForClassAObject=groupsForAClass[groupForCurrentClassObject];
                 nearestGroupForClassAObject.push_back(currentClassAObject);
                 groupsForAClass[groupForCurrentClassObject]=nearestGroupForClassAObject;
             }
-            for(Object currentClassBObject : classBObjects){
+            for(int i=0; i<classBObjectsCount;i++){
+                if (std::find(currentChoicesIndexesForB.begin(),currentChoicesIndexesForB.end(),i)!=currentChoicesIndexesForB.end())
+                    continue;
                 float minDistanceFromClassBObjectToMean=99999999999.9f;
+                Object currentClassBObject=classBObjects.at(i);
                 int groupForCurrentClassObject=0;
                 for (int j=0; j<meansForBClassGroups.size();j++){
                     Object currentMean=meansForBClassGroups.at(j);
@@ -588,43 +712,116 @@ double Database::classifyNM()
                         currentMean.setFeature(currentFeature,currentFeatureValue);
                 }
              }
+            for (int currentStep=1;currentStep<meansCalculateCount;currentStep++){
 
-        }
-        std::vector<Object> meansForAllClasses;
-        meansForAllClasses.insert(meansForAllClasses.end(),meansForAClassGroups.begin(),meansForAClassGroups.end());
-        meansForAllClasses.insert(meansForAllClasses.end(),meansForBClassGroups.begin(),meansForBClassGroups.end());
-        for (Object testObject : testObjects){
-            int nearestMeanForTestObjectIndex=0;
-            float minDistanceToMean=99999999999.9f;
-            for (int currentMeansIndex=0;currentMeansIndex<meansForAllClasses.size();currentMeansIndex++){
-                Object currentMean=meansForAllClasses.at(currentMeansIndex);
-                float distanceToMean=0.0f;
-                for (int i=0; i<noFeatures;i++){
-                    distanceToMean+=(testObject.getFeature(i)-currentMean.getFeature(i))*(testObject.getFeature(i)-currentMean.getFeature(i));
+
+                for(Object currentClassAObject : classAObjects){
+                    float minDistanceFromClassAObjectToMean=99999999999.9f;
+                    int groupForCurrentClassObject=0;
+                    for (int j=0; j<meansForAClassGroups.size();j++){
+                        Object currentMean=meansForAClassGroups.at(j);
+                        float distanceFromObjectAToMean=0.0f;
+                        for (int featureNo=0; featureNo<noFeatures;featureNo++){
+                            distanceFromObjectAToMean+=(currentClassAObject.getFeature(featureNo)-currentMean.getFeature(featureNo))*
+                                    (currentClassAObject.getFeature(featureNo)-currentMean.getFeature(featureNo));
+                        }
+                        distanceFromObjectAToMean=(float)sqrt((double)distanceFromObjectAToMean)/(float)noFeatures;
+                        if (distanceFromObjectAToMean<=minDistanceFromClassAObjectToMean){
+                            minDistanceFromClassAObjectToMean=distanceFromObjectAToMean;
+                            groupForCurrentClassObject=j;
+                        }
+                    }
+                    std::vector<Object>nearestGroupForClassAObject=groupsForAClass[groupForCurrentClassObject];
+                    nearestGroupForClassAObject.push_back(currentClassAObject);
+                    groupsForAClass[groupForCurrentClassObject]=nearestGroupForClassAObject;
                 }
-                distanceToMean=(float)sqrt((double)distanceToMean)/(float)noFeatures;
-                if (distanceToMean<=minDistanceToMean){
-                    minDistanceToMean=distanceToMean;
-                    nearestMeanForTestObjectIndex=currentMeansIndex;
+                for(Object currentClassBObject : classBObjects){
+                    float minDistanceFromClassBObjectToMean=99999999999.9f;
+                    int groupForCurrentClassObject=0;
+                    for (int j=0; j<meansForBClassGroups.size();j++){
+                        Object currentMean=meansForBClassGroups.at(j);
+                        float distanceFromObjectBToMean=0.0f;
+                        for (int featureNo=0; featureNo<noFeatures;featureNo++){
+                            distanceFromObjectBToMean+=(currentClassBObject.getFeature(featureNo)-currentMean.getFeature(featureNo))*
+                                    (currentClassBObject.getFeature(featureNo)-currentMean.getFeature(featureNo));
+                        }
+                        distanceFromObjectBToMean=(float)sqrt((double)distanceFromObjectBToMean)/(float)noFeatures;
+                        if (distanceFromObjectBToMean<=minDistanceFromClassBObjectToMean){
+                            minDistanceFromClassBObjectToMean=distanceFromObjectBToMean;
+                            groupForCurrentClassObject=j;
+                        }
+                    }
+                    std::vector<Object> nearestGroupForClassBObject=groupsForBClass[groupForCurrentClassObject];
+                    nearestGroupForClassBObject.push_back(currentClassBObject);
+                    groupsForBClass[groupForCurrentClassObject]=nearestGroupForClassBObject;
                 }
+                for (int currentGroupIndex=0;currentGroupIndex<meansForAClassGroups.size();currentGroupIndex++){
+                    Object currentMean=meansForAClassGroups.at(currentGroupIndex);
+                    for (int currentFeature=0; currentFeature<noFeatures;currentFeature++){
+                            std::vector<Object> elementsFromClassAGroup=groupsForAClass.at(currentGroupIndex);
+                            float currentFeatureValue=0.0f;
+                            for (Object currentObjectFromGroup : elementsFromClassAGroup)
+                                currentFeatureValue+=currentObjectFromGroup.getFeature(currentFeature);
+                            currentFeatureValue/=elementsFromClassAGroup.size();
+                            currentMean.setFeature(currentFeature,currentFeatureValue);
+                        }
+                    }
+                for (int currentGroupIndex=0;currentGroupIndex<meansForBClassGroups.size();currentGroupIndex++){
+                    Object currentMean=meansForBClassGroups.at(currentGroupIndex);
+                    for (int currentFeature=0; currentFeature<noFeatures;currentFeature++){
+                            std::vector<Object> elementsFromClassBGroup=groupsForBClass.at(currentGroupIndex);
+                            float currentFeatureValue=0.0f;
+                            for (Object currentObjectFromGroup : elementsFromClassBGroup)
+                                currentFeatureValue+=currentObjectFromGroup.getFeature(currentFeature);
+                            currentFeatureValue/=elementsFromClassBGroup.size();
+                            currentMean.setFeature(currentFeature,currentFeatureValue);
+                    }
+                 }
+
             }
-            Object nearestMean = meansForAllClasses.at(nearestMeanForTestObjectIndex);
-            nearestMeansClassNamesForTestObjects.push_back(nearestMean.getClassName());
-//            std::cout<<"Found nearest mean: "<<nearestMean.getClassName()<<std::endl;
+
+            std::vector<Object> meansForAllClasses;
+            meansForAllClasses.insert(meansForAllClasses.end(),meansForAClassGroups.begin(),meansForAClassGroups.end());
+            meansForAllClasses.insert(meansForAllClasses.end(),meansForBClassGroups.begin(),meansForBClassGroups.end());
+            for (Object testObject : currentTestObjects){
+                int nearestMeanForTestObjectIndex=0;
+                float minDistanceToMean=99999999999.9f;
+                for (int currentMeansIndex=0;currentMeansIndex<meansForAllClasses.size();currentMeansIndex++){
+                    Object currentMean=meansForAllClasses.at(currentMeansIndex);
+                    float distanceToMean=0.0f;
+                    for (int i=0; i<noFeatures;i++){
+                        distanceToMean+=(testObject.getFeature(i)-currentMean.getFeature(i))*(testObject.getFeature(i)-currentMean.getFeature(i));
+                    }
+                    distanceToMean=(float)sqrt((double)distanceToMean)/(float)noFeatures;
+                    if (distanceToMean<=minDistanceToMean){
+                        minDistanceToMean=distanceToMean;
+                        nearestMeanForTestObjectIndex=currentMeansIndex;
+                    }
+                }
+                Object nearestMean = meansForAllClasses.at(nearestMeanForTestObjectIndex);
+                nearestMeansClassNamesForTestObjects.push_back(nearestMean.getClassName());
+    //            std::cout<<"Found nearest mean: "<<nearestMean.getClassName()<<std::endl;
+            }
+
+            std::cout<<"testObjects size: "<<currentTestObjects.size()<<std::endl<<
+                    "nearestMeans size: "<<nearestMeansClassNamesForTestObjects.size()<<std::endl;
+            int algorythmRightAnswers=0;
+            for (int i=0;i<nearestMeansClassNamesForTestObjects.size();i++){
+                Object testObject=currentTestObjects.at(i);
+                std::string currentAnswer=nearestMeansClassNamesForTestObjects.at(i);
+                if (testObject.compareName(currentAnswer))
+                    algorythmRightAnswers++;
+            }
+            std::cout<<"Right answers: "<<algorythmRightAnswers<<std::endl;
+            probability=(double)algorythmRightAnswers/(double)currentTestObjects.size();
+            probabilities.push_back(probability);
         }
-        std::cout<<"testObjects size: "<<testObjects.size()<<std::endl<<
-                "nearestMeans size: "<<nearestMeansClassNamesForTestObjects.size()<<std::endl;
-        int algorythmRightAnswers=0;
-        for (int i=0;i<nearestMeansClassNamesForTestObjects.size();i++){
-            Object testObject=testObjects.at(i);
-            std::string currentAnswer=nearestMeansClassNamesForTestObjects.at(i);
-            if (testObject.compareName(currentAnswer))
-                algorythmRightAnswers++;
+        for (double probability : probabilities){
+            finalProbability+=probability;
         }
-        std::cout<<"Right answers: "<<algorythmRightAnswers<<std::endl;
-        probability=(double)algorythmRightAnswers/(double)noTestObjects;
+        finalProbability/=(double)probabilities.size();
     }
-    return probability*100;
+    return finalProbability*100;
 }
 
 

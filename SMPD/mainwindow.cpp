@@ -569,21 +569,38 @@ void MainWindow::on_CpushButtonTrain_clicked()
         ui->CtextBrowser->clear();
         ui->CcomboBoxClassifiers->clear();
         ui->CcomboBoxK->clear();
-        ui->CtextBrowser->append("Training part: " + QString::number(database.getNoTrainingObjects()));
-        ui->CtextBrowser->append("Test part: " + QString::number(database.getNoTestObjects()));
+//        std::iterator<std::vector<Object>> trainingGroupIterator=database.getTrainingGroups().iterator;
+//        std::iterator<std::vector<Object>> testGroupIterator=database.getTestGroups().iterator;
+        for (int i=0;i<database.getTestGroups().size();i++){
+            std::vector<Object> currentTrainingGroup=database.getTrainingGroup(i);
+            std::vector<Object> currentTestGroup=database.getTestGroup(i);
+            ui->CtextBrowser->append("Training part: " + QString::number(currentTrainingGroup.size()));
+            ui->CtextBrowser->append("Test part: " + QString::number(currentTestGroup.size()));
+        }
         ui->CcomboBoxClassifiers->addItem("Nearest Neighbor (NN)");
         ui->CcomboBoxClassifiers->addItem("Nearest Mean (NM)");
         ui->CpushButtonExecute->setEnabled(true);
-        if (database.getClassAObjectsCount()<=database.getClassBObjectsCount()){
-            if (database.getClassAObjectsCount()%2==0)
-                database.setK(database.getClassAObjectsCount()-1);
-            else
-                database.setK(database.getClassAObjectsCount());
-        } else if (database.getClassAObjectsCount()>database.getClassBObjectsCount()){
-            if (database.getClassBObjectsCount()%2==0)
-                database.setK(database.getClassBObjectsCount()-1);
-            else
-                database.setK(database.getClassBObjectsCount());
+        std::vector<std::map<std::string,std::vector<Object>>> classes=database.getClassesGroups();
+        for (std::map<std::string,std::vector<Object>> currentClassesGroup : classes){
+            int classACount=currentClassesGroup.at("A").size();
+            int classBCount=currentClassesGroup.at("B").size();
+            database.setK(99999);
+            if (classACount<=classBCount){
+                if (classACount%2==0){
+                    if (classACount<database.getK())
+                        database.setK(classACount-1);
+                } else
+                    if (classACount<database.getK())
+                        database.setK(classACount);
+
+            } else if (classACount>classBCount){
+                if (classBCount%2==0){
+                    if (classBCount<database.getK())
+                        database.setK(classBCount-1);
+                } else
+                    if (classBCount<database.getK())
+                        database.setK(classBCount);
+            }
         }
         int k=database.getK();
         for (int i=0;i<=k;i++){
