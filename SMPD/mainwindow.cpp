@@ -17,6 +17,42 @@ MainWindow::MainWindow(QWidget *parent) :
     QDoubleValidator* validator=new QDoubleValidator(0.00127551,0.99872449,10,ui->CTrainPartLineEdit);
     validator->setNotation(QDoubleValidator::StandardNotation);
     FSupdateButtonState();
+    cv::Mat inputImage = cv::imread(std::string("//home//vkalashnykov//WEEiA_PROJEKTY//Semestr1-2stopien//SMPD//SMPD//data short//Acer_Campestre//Acer_Campestre_01.ab.jpg"));
+    cv::Mat monoImage;
+    //cv::imshow("myImage", inputImage);
+
+    cv::cvtColor(inputImage, monoImage, cv::COLOR_RGB2GRAY);
+
+
+    //cv:Canny( monoImage, monoImage, 10, 10);
+
+
+    //cv::imshow("myImage", monoImage);
+
+
+    QImage image((uchar*)monoImage.data, monoImage.cols, monoImage.rows, monoImage.step, QImage::Format_Grayscale8);
+    image = image.scaledToWidth(ui->PgraphicsView->width());
+    QGraphicsScene* scene = new QGraphicsScene();
+    scene->addPixmap(QPixmap::fromImage(image));
+
+    ui->PgraphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PgraphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PgraphicsView->setScene(scene);
+    ui->PgraphicsView->show();
+
+
+    cv:Canny( monoImage, monoImage, 10, 10);
+
+
+    QImage imageEdge((uchar*)monoImage.data, monoImage.cols, monoImage.rows, monoImage.step, QImage::Format_Grayscale8);
+    imageEdge = imageEdge.scaledToWidth(ui->PgraphicsView->width());
+    QGraphicsScene* sceneEdge = new QGraphicsScene();
+    sceneEdge->addPixmap(QPixmap::fromImage(imageEdge));
+
+    ui->PgraphicsViewEdge->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PgraphicsViewEdge->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PgraphicsViewEdge->setScene(sceneEdge);
+    ui->PgraphicsViewEdge->show();
 }
 
 MainWindow::~MainWindow()
@@ -228,7 +264,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
             ui->FStextBrowserDatabaseInfo->append("max_ind: "  +  QString::number(max_ind) + " " + QString::number(FLD));
           } else if (dimension>1){
-            float FND=0, tmp=0;
+            double FND=0, tmp=0;
 
             std::vector<int> maxIndexes;
 
@@ -315,15 +351,13 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                         }
                     }
                 }
-                float dispersionBetweenClasses=0;
+                double dispersionBetweenClasses=0;
                 for (int j=0;j<dimension;++j){
                     dispersionBetweenClasses+=(meansA(j)-meansB(j))*(meansA(j)-meansB(j));
                 }                
                 dispersionBetweenClasses=sqrt(dispersionBetweenClasses);
                 std::cout<<"dispersion between classes in current set: "<<dispersionBetweenClasses<<std::endl;
-                boost::numeric::ublas::matrix<float> s(dimension,dimension);
-                s=sA+sB;
-                float dispersionInClasses=determinant(s);
+                double dispersionInClasses=determinant(sA)+determinant(sB);
                 std::cout<<"dispersion in classes in current set: "<<dispersionInClasses<<std::endl;
                 tmp=dispersionBetweenClasses/dispersionInClasses;
                 std::cout<<"Fisher for current features set: "<<tmp<<std::endl;
@@ -340,10 +374,9 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                 else
                     maxIndexesString+=std::to_string(maxIndexes.at(i));
             }
-            double fndDouble=(double)FND;
             std::cout<<"Maximum Fisher value: "<<FND<<std::endl;
             ui->FStextBrowserDatabaseInfo->append("Optimum features indexes: "+QString::fromStdString(maxIndexesString));
-            ui->FStextBrowserDatabaseInfo->append("Maximum Fisher: "+QString::number(fndDouble));
+            ui->FStextBrowserDatabaseInfo->append("Maximum Fisher: "+QString::number(FND));
 
 
         }
@@ -359,7 +392,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
         std::vector<int> maxIndexes;
         boost::numeric::ublas::vector<float> meansA(dimension), meansB(dimension);
         boost::numeric::ublas::matrix<float> dispersionA(dimension,classACount), dispersionB(dimension,classBCount);
-        float maxSFS=0, currentMaxSFS=0;
+        double maxSFS=0, currentMaxSFS=0;
         int currentMaxIndex=-1;
         for (int featureCount=1;featureCount<=dimension;featureCount++){
             float currentMaxAMean=0.0f,currentMaxBMean=0.0f;
@@ -465,15 +498,13 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                         }
                         std::cout<<std::endl;
                     }
-                    float dispersionBetweenClasses=0.0;
+                    double dispersionBetweenClasses=0.0;
                     for (int i=0;i<featureCount;i++)
                         dispersionBetweenClasses+=(currentMeansA(i)-currentMeansB(i))*(currentMeansA(i)-currentMeansB(i));
                     dispersionBetweenClasses=sqrt(dispersionBetweenClasses);
-                    boost::numeric::ublas::matrix<float> s(featureCount,featureCount);
-                    s=sA+sB;
-                    float dispersionInClasses=0.0;
-                    dispersionInClasses=determinant(s);
-                    float currentSFS=dispersionBetweenClasses/dispersionInClasses;
+                    double dispersionInClasses=0.0;
+                    dispersionInClasses=determinant(sA)+determinant(sB);
+                    double currentSFS=dispersionBetweenClasses/dispersionInClasses;
                     std::cout<<"dispersion in classes: "<<dispersionInClasses<<std::endl;
                     std::cout<<"dispersion between classes: "<<dispersionBetweenClasses<<std::endl;
                     std::cout<<"SFS value: "<<currentSFS<<std::endl;
@@ -495,7 +526,6 @@ void MainWindow::on_FSpushButtonCompute_clicked()
 
         }
 //        std::cout<<"Max SFS value: "<<maxSFS<<std::endl;
-        double doubleMaxSFS=(double)maxSFS;
         std::string maxIndexesString="";
         for (int i=0;i<maxIndexes.size();++i){
             if (i<maxIndexes.size()-1)
@@ -504,7 +534,7 @@ void MainWindow::on_FSpushButtonCompute_clicked()
                 maxIndexesString+=std::to_string(maxIndexes.at(i));
         }
         ui->FStextBrowserDatabaseInfo->append("Optimum features indexes: "+QString::fromStdString(maxIndexesString));
-        ui->FStextBrowserDatabaseInfo->append("Maximum SFS: "+QString::number(doubleMaxSFS));
+        ui->FStextBrowserDatabaseInfo->append("Maximum SFS: "+QString::number(maxSFS));
 
     }
 }
@@ -522,11 +552,11 @@ void MainWindow::on_FSpushButtonSaveFile_clicked()
 
 void MainWindow::on_PpushButtonSelectFolder_clicked()
 {
-    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+    QString folderName = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
                                                  "",
                                                  QFileDialog::ShowDirsOnly
                                                  | QFileDialog::DontResolveSymlinks);
-    fileFolder=dir;
+    PLoadDatabase(folderName);
 }
 
 void MainWindow::on_CpushButtonOpenFile_clicked()
@@ -650,5 +680,25 @@ void MainWindow::on_CpushButtonExecute_clicked()
         }
         ui->CtextBrowser->setTextCursor(cursor);
         ui->CtextBrowser->append("Probability: "+QString::number(probability)+"%");
+    }
+}
+
+
+void MainWindow::PLoadDatabase(QString folderName)
+{
+ //   cv::Mat imgOriginal;
+
+    QDirIterator it(folderName, QDir::Dirs | QDir::NoDotAndDotDot);
+    while (it.hasNext())
+    {
+       QString path = it.next();
+       qDebug() << path;
+
+       QDirIterator fileIt(path, QStringList() << "*.jpg", QDir::Files);
+       while (fileIt.hasNext())
+       {
+
+           qDebug() << fileIt.next();
+       }
     }
 }

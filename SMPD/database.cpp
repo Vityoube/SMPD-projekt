@@ -299,6 +299,11 @@ bool Database::load(const std::string &fileName)
     return true;
 }
 
+bool Database::loadImage(const std::__cxx11::string &imageName)
+{
+
+}
+
 void Database::save(const std::string &fileName)
 {
     std::ofstream file(fileName, std::ios::out | std::ios::in | std::ios::trunc);
@@ -372,24 +377,51 @@ bool Database::trainObjects(double trainingPartPercent,std::string method)
         if(trainingPart<noObjects && trainingPart>0){            
             for (int currentGroup=0;currentGroup<trainingPart;currentGroup++){
                 std::vector<int> bootstrapObjectsIds;
+                std::vector<int> classABootstrapObjectsIds,classBBootstrapObjectsIds;
+                std::vector<Object> classABootstrap, classBBootstrap;
+                for (Object object :objects){
+                    if (object.compareName("Acer")==0)
+                        classABootstrap.push_back(object);
+                    else if (object.compareName("Quercus")==0)
+                        classBBootstrap.push_back(object);
+                }
                 std::vector<Object> currentTrainingGroup;
                 std::vector<Object> currentTestGroup;
-                std::vector<int> currentTrainingObjectsIds;
-                for (int i=0;i<trainingPart;i++){
-                    int currentIndex=rand()%noObjects;
-                    bootstrapObjectsIds.push_back(currentIndex);                 \
+                std::vector<int> currentATrainingObjectsIds, currentBTrainingObjectsIds;
+                for (int i=0;i<trainingPart/2;i++){
+                    int currentIndexA=rand()%classABootstrap.size();
+                    classABootstrapObjectsIds.push_back(currentIndexA);                 \
                 }
-                for (int bootstrapObjectId : bootstrapObjectsIds){
-                    if (std::find(currentTrainingObjectsIds.begin(),currentTrainingObjectsIds.end(),bootstrapObjectId)==currentTrainingObjectsIds.end()){
-                        Object bootstrapObject=objects.at(bootstrapObjectId);
-                        currentTrainingGroup.push_back(bootstrapObject);
-                        currentTrainingObjectsIds.push_back(bootstrapObjectId);
+                for (int i=0;i<trainingPart/2;i++){
+                    int currentIndexB=rand()%classBBootstrap.size();
+                    classBBootstrapObjectsIds.push_back(currentIndexB);
+                }
+                for (int classAbootstrapObjectId : classABootstrapObjectsIds){
+                    if (std::find(currentATrainingObjectsIds.begin(),currentATrainingObjectsIds.end(),classAbootstrapObjectId)
+                            ==currentATrainingObjectsIds.end()){
+                        Object bootstrapObjectA=classABootstrap.at(classAbootstrapObjectId);
+                        currentTrainingGroup.push_back(bootstrapObjectA);
+                        currentATrainingObjectsIds.push_back(classAbootstrapObjectId);
                     }
                 }
-                for (int i=0;i<noObjects;i++){
-                    if (std::find(currentTrainingObjectsIds.begin(),currentTrainingObjectsIds.end(),i)==currentTrainingObjectsIds.end()){
-                        Object testObject=objects.at(i);
-                        currentTestGroup.push_back(testObject);
+                for (int classBBootstrapObjectId : classBBootstrapObjectsIds){
+                    if (std::find(currentBTrainingObjectsIds.begin(),currentBTrainingObjectsIds.end(),classBBootstrapObjectId)
+                            ==currentBTrainingObjectsIds.end()){
+                        Object bootstrapObjectB=classBBootstrap.at(classBBootstrapObjectId);
+                        currentTrainingGroup.push_back(bootstrapObjectB);
+                        currentBTrainingObjectsIds.push_back(classBBootstrapObjectId);
+                    }
+                }
+                for (int i=0;i<classABootstrap.size();i++){
+                    if (std::find(currentATrainingObjectsIds.begin(),currentATrainingObjectsIds.end(),i)==currentATrainingObjectsIds.end()){
+                        Object testObjectA=classABootstrap.at(i);
+                        currentTestGroup.push_back(testObjectA);
+                    }
+                }
+                for (int i=0;i<classBBootstrap.size();i++){
+                    if (std::find(currentBTrainingObjectsIds.begin(),currentBTrainingObjectsIds.end(),i)==currentBTrainingObjectsIds.end()){
+                        Object testObjectB=classBBootstrap.at(i);
+                        currentTestGroup.push_back(testObjectB);
                     }
                 }
                 trainingGroups.push_back(currentTrainingGroup);
@@ -404,30 +436,93 @@ bool Database::trainObjects(double trainingPartPercent,std::string method)
         int trainingPartsCount=(int)(trainingPartPercent*100);
         std::cout<<"Parts count: "<<trainingPartsCount<<std::endl;
         std::vector<std::vector<Object>> objectsGroups;
-        if (trainingPartsCount<noObjects && trainingPartsCount>0){
-            int lastPartBegin=0;
-            for (int currentPartBegin=0;currentPartBegin<noObjects-(noObjects/(trainingPartsCount-1));
-                 currentPartBegin+=(int)(noObjects/trainingPartsCount)){
-//                std::cout<<"Current part begin index: "<<currentPartBegin<<std::endl;
-                int currentPartEnd=currentPartBegin+(int)(noObjects/trainingPartsCount);
-                if (currentPartEnd>noObjects)
-                    currentPartEnd=noObjects;
-                std::vector<Object> currentGroup;
-                for (int i=currentPartBegin;i<currentPartEnd;i++){
-                    currentGroup.push_back(objects.at(i));
+        std::vector<Object> classACross, classBCross;
+        for (Object object :objects){
+            if (object.compareName("Acer")==0)
+                classACross.push_back(object);
+            else if (object.compareName("Quercus")==0)
+                classBCross.push_back(object);
+        }
+        if (trainingPartsCount<noObjects && trainingPartsCount>1){
+            if (trainingPartsCount==2){
+                std::vector<Object> firstGroup;
+                for (int iA=0;iA<classACross.size()/trainingPartsCount;iA++){
+                    firstGroup.push_back(classACross.at(iA));
                 }
-//                std::cout<<"Current group size: "<<currentGroup.size()<<std::endl;
-//                std::cout<<"Current end index: "<<currentPartEnd<<std::endl;
-                objectsGroups.push_back(currentGroup);
-                lastPartBegin=currentPartEnd;
-//                std::cout<<"current Group Size: "<<currentGroup.size()<<std::endl;
-//                std::cout<<"groups count: "<<objectsGroups.size()<<std::endl;
+                for (int iB=0;iB<classBCross.size();iB++){
+                    firstGroup.push_back(classBCross.at(iB));
+                }
+                objectsGroups.push_back(firstGroup);
+                std::vector<Object> secondGroup;
+                for (int iA=classACross.size()/trainingPartsCount;iA<classACross.size();iA++){
+                    secondGroup.push_back(classACross.at(iA));
+                }
+                for (int iB=classACross.size()/trainingPartsCount;iB<classBCross.size();iB++){
+                    secondGroup.push_back(classBCross.at(iB));
+                }
+                objectsGroups.push_back(secondGroup);
+            } else {
+                std::vector<std::vector<Object>> classAGroups, classBGroups;
+                int lastPartBeginA=0, lastPartBeginB;
+                for (int currentPartBeginA=0;currentPartBeginA<classACross.size()-(classACross.size()/(trainingPartsCount));
+                     currentPartBeginA+=(int)(classACross.size()/trainingPartsCount)){
+    //                std::cout<<"Current part begin index: "<<currentPartBegin<<std::endl;
+                    int currentPartEndA=currentPartBeginA+(int)(classACross.size()/trainingPartsCount);
+                    if (currentPartEndA>classACross.size())
+                        currentPartEndA=classACross.size();
+                    std::vector<Object> currentGroupA;
+                    for (int i=currentPartBeginA;i<currentPartEndA;i++){
+                        currentGroupA.push_back(classACross.at(i));
+                    }
+                    lastPartBeginA=currentPartEndA;
+                    classAGroups.push_back(currentGroupA);
+    //                std::cout<<"Current group size: "<<currentGroup.size()<<std::endl;
+    //                std::cout<<"Current end index: "<<currentPartEnd<<std::endl;
+
+    //                std::cout<<"current Group Size: "<<currentGroup.size()<<std::endl;
+    //                std::cout<<"groups count: "<<objectsGroups.size()<<std::endl;
+                }
+                for (int currentPartBeginB=0;currentPartBeginB<classBCross.size()-(classBCross.size()/(trainingPartsCount));
+                     currentPartBeginB+=(int)(classBCross.size()/trainingPartsCount)){
+    //                std::cout<<"Current part begin index: "<<currentPartBegin<<std::endl;
+                    int currentPartEndB=currentPartBeginB+(int)(classBCross.size()/trainingPartsCount);
+                    if (currentPartEndB>classBCross.size())
+                        currentPartEndB=classBCross.size();
+                    std::vector<Object> currentGroupB;
+                    for (int i=currentPartBeginB;i<currentPartEndB;i++){
+                        currentGroupB.push_back(classBCross.at(i));
+                    }
+                    classBGroups.push_back(currentGroupB);
+                    lastPartBeginB=currentPartEndB;
+    //                std::cout<<"Current group size: "<<currentGroup.size()<<std::endl;
+    //                std::cout<<"Current end index: "<<currentPartEnd<<std::endl;
+
+    //                std::cout<<"current Group Size: "<<currentGroup.size()<<std::endl;
+    //                std::cout<<"groups count: "<<objectsGroups.size()<<std::endl;
+                }
+                for (int i=0;i<classAGroups.size();i++){
+                    std::vector<Object> currentGroup;
+                    std::vector<Object> currentGroupA=classAGroups.at(i);
+                    std::vector<Object> currentGroupB=classBGroups.at(i);
+                    for(Object classAObject : currentGroupA){
+                        currentGroup.push_back(classAObject);
+                    }
+                    for(Object classBObject : currentGroupB){
+                        currentGroup.push_back(classBObject);
+                    }
+                    objectsGroups.push_back(currentGroup);
+
+                }
+
+                std::vector<Object> lastGroup;
+                for (int i=lastPartBeginA;i<classACross.size();i++){
+                    lastGroup.push_back(classACross.at(i));
+                }
+                for (int i=lastPartBeginB;i<classBCross.size();i++){
+                    lastGroup.push_back(classBCross.at(i));
+                }
+                objectsGroups.push_back(lastGroup);
             }
-            std::vector<Object> lastPartGroup;
-            for (int i=lastPartBegin;i<noObjects;i++){
-                lastPartGroup.push_back(objects.at(i));
-            }
-            objectsGroups.push_back(lastPartGroup);
             std::vector<Object> trainingGroup;
             for (int i=0;i<objectsGroups.size();i++){
                 std::vector<Object> currentGroup=objectsGroups.at(i);
@@ -464,6 +559,8 @@ bool Database::trainObjects(double trainingPartPercent,std::string method)
         currentClassesGroup.insert(std::pair<std::string,std::vector<Object>>("A",classA));
         currentClassesGroup.insert(std::pair<std::string,std::vector<Object>>("B",classB));
         classesGroups.push_back(currentClassesGroup);
+        std::cout<<"classes count: "<<classesGroups.size()<<std::endl;
+        std::cout<<"class A size"<<currentClassesGroup.at("A").size()<<std::endl;
     }
     return true;
 
@@ -620,6 +717,7 @@ double Database::classifyNM()
             std::vector<Object> classBObjects=classes.at("B");
             std::vector<Object> currentTestObjects=testGroups.at(currentGroup);
             int classAObjectsCount=classAObjects.size(), classBObjectsCount=classBObjects.size();
+            std::cout<<"Class A size: "<<classAObjects.size()<<std::endl;
             std::vector<int> currentChoicesIndexesForA;
             for (int i=0;i<k;i++){
                 int currentChoiceIndex=rand()%classAObjects.size();
@@ -629,6 +727,7 @@ double Database::classifyNM()
                     currentChoicesIndexesForA.push_back(currentChoiceIndex);
                 }
             }
+
             std::vector<int> currentChoicesIndexesForB;
             for (int i=0;i<k;i++){
                 int currentChoiceIndex=rand()%classBObjects.size();

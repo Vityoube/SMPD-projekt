@@ -39,6 +39,7 @@ public:
     QPushButton *PpushButtonSelectFolder;
     QGraphicsView *PgraphicsView;
     QGraphicsView *PgraphicsViewEdge;
+    QPushButton *PpushButtonSaveFile;
     QWidget *tabFS;
     QPushButton *FSpushButtonOpenFile;
     QPushButton *FSpushButtonSaveFile;
@@ -88,6 +89,9 @@ public:
         PgraphicsViewEdge = new QGraphicsView(tabP);
         PgraphicsViewEdge->setObjectName(QStringLiteral("PgraphicsViewEdge"));
         PgraphicsViewEdge->setGeometry(QRect(680, 250, 256, 192));
+        PpushButtonSaveFile = new QPushButton(tabP);
+        PpushButtonSaveFile->setObjectName(QStringLiteral("PpushButtonSaveFile"));
+        PpushButtonSaveFile->setGeometry(QRect(110, 10, 75, 31));
         tabWidget->addTab(tabP, QString());
         tabFS = new QWidget();
         tabFS->setObjectName(QStringLiteral("tabFS"));
@@ -174,7 +178,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(2);
+        tabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -184,6 +188,7 @@ public:
     {
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", 0));
         PpushButtonSelectFolder->setText(QApplication::translate("MainWindow", "Select Folder", 0));
+        PpushButtonSaveFile->setText(QApplication::translate("MainWindow", "Save File", 0));
         tabWidget->setTabText(tabWidget->indexOf(tabP), QApplication::translate("MainWindow", "Preprocessing", 0));
         FSpushButtonOpenFile->setText(QApplication::translate("MainWindow", "Open File", 0));
         FSpushButtonSaveFile->setText(QApplication::translate("MainWindow", "Save File", 0));

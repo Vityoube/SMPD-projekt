@@ -70,6 +70,7 @@ public:
     bool addObject(const Object &object);
     void clear();
     bool load(const std::string &fileName);
+    bool loadImage(const std::string &imageName);
     void save(const std::string &fileName);
     bool trainObjects(double trainingPartPercent, std::string method);
     double classifyNN();

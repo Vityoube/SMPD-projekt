@@ -9,6 +9,10 @@
 #include <QtGui>
 #include <QMessageBox>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 
 #include"database.h"
 
@@ -40,6 +44,7 @@ private:
     int matrixDeterminantSign(const boost::numeric::ublas::permutation_matrix<std::size_t> & pemutationMatrix);
     int determinant_sign(const boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
     double determinant(boost::numeric::ublas::matrix<float>& m);
+    void PLoadDatabase(QString folderName);
 
 private slots:
     void on_FSpushButtonOpenFile_clicked();
@@ -65,6 +70,7 @@ private:
 private:
      Database database;
      QString fileFolder="";
+     QString imageFolder="";
 };
 
 #endif // MAINWINDOW_H

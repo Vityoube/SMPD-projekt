@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I../SMPD -I. -I../../../../Qt5.7.0/5.7/gcc_64/include -I../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets -I../../../../Qt5.7.0/5.7/gcc_64/include/QtGui -I../../../../Qt5.7.0/5.7/gcc_64/include/QtCore -I. -I. -I../../../../Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++
+INCPATH       = -I../SMPD -I. -isystem /usr/local/include/opencv -I../../../../Qt5.7.0/5.7/gcc_64/include -I../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets -I../../../../Qt5.7.0/5.7/gcc_64/include/QtGui -I../../../../Qt5.7.0/5.7/gcc_64/include/QtCore -I. -I. -I../../../../Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++
 QMAKE         = /home/vkalashnykov/Qt5.7.0/5.7/gcc_64/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -36,7 +36,7 @@ DISTNAME      = SMPD1.0.0
 DISTDIR = /home/vkalashnykov/WEEiA_PROJEKTY/Semestr1-2stopien/SMPD/build-SMPD-Desktop_Qt_5_7_0_GCC_64bit-Debug/.tmp/SMPD1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-rpath,/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/lib
-LIBS          = $(SUBLIBS) -L/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/lib -lQt5Widgets -L/usr/lib64 -lQt5Gui -lQt5Core -lGL -lpthread 
+LIBS          = $(SUBLIBS) /usr/local/lib/libopencv_calib3d.so /usr/local/lib/libopencv_core.so /usr/local/lib/libopencv_features2d.so /usr/local/lib/libopencv_highgui.so /usr/local/lib/libopencv_imgproc.so /usr/local/lib/libopencv_flann.so /usr/local/lib/libopencv_imgcodecs.so /usr/local/lib/libopencv_ml.so /usr/local/lib/libopencv_objdetect.so /usr/local/lib/libopencv_photo.so /usr/local/lib/libopencv_shape.so /usr/local/lib/libopencv_stitching.so /usr/local/lib/libopencv_superres.so /usr/local/lib/libopencv_videoio.so /usr/local/lib/libopencv_video.so /usr/local/lib/libopencv_videostab.so /usr/local/lib/libopencv_viz.so -L/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/lib -lQt5Widgets -L/usr/lib64 -lQt5Gui -lQt5Core -lGL -lpthread 
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -907,7 +907,7 @@ moc_mainwindow.cpp: ../../../../Qt5.7.0/5.7/gcc_64/include/QtWidgets/QMainWindow
 		../SMPD/matrixutil.hpp \
 		../SMPD/mainwindow.h \
 		../../../../Qt5.7.0/5.7/gcc_64/bin/moc
-	/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/vkalashnykov/WEEiA_PROJEKTY/Semestr1-2stopien/SMPD/SMPD -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtGui -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtCore -I. -I/usr/include/c++/6 -I/usr/include/x86_64-linux-gnu/c++/6 -I/usr/include/c++/6/backward -I/usr/lib/gcc/x86_64-linux-gnu/6/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../SMPD/mainwindow.h -o moc_mainwindow.cpp
+	/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/vkalashnykov/WEEiA_PROJEKTY/Semestr1-2stopien/SMPD/SMPD -I/usr/local/include/opencv -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtGui -I/home/vkalashnykov/Qt5.7.0/5.7/gcc_64/include/QtCore -I. -I/usr/include/c++/6 -I/usr/include/x86_64-linux-gnu/c++/6 -I/usr/include/c++/6/backward -I/usr/lib/gcc/x86_64-linux-gnu/6/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../SMPD/mainwindow.h -o moc_mainwindow.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
