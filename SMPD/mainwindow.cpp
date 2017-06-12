@@ -17,42 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QDoubleValidator* validator=new QDoubleValidator(0.00127551,0.99872449,10,ui->CTrainPartLineEdit);
     validator->setNotation(QDoubleValidator::StandardNotation);
     FSupdateButtonState();
-    cv::Mat inputImage = cv::imread(std::string("//home//vkalashnykov//WEEiA_PROJEKTY//Semestr1-2stopien//SMPD//SMPD//data short//Acer_Campestre//Acer_Campestre_01.ab.jpg"));
-    cv::Mat monoImage;
-    //cv::imshow("myImage", inputImage);
-
-    cv::cvtColor(inputImage, monoImage, cv::COLOR_RGB2GRAY);
-
-
-    //cv:Canny( monoImage, monoImage, 10, 10);
-
-
-    //cv::imshow("myImage", monoImage);
-
-
-    QImage image((uchar*)monoImage.data, monoImage.cols, monoImage.rows, monoImage.step, QImage::Format_Grayscale8);
-    image = image.scaledToWidth(ui->PgraphicsView->width());
-    QGraphicsScene* scene = new QGraphicsScene();
-    scene->addPixmap(QPixmap::fromImage(image));
-
-    ui->PgraphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->PgraphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->PgraphicsView->setScene(scene);
-    ui->PgraphicsView->show();
-
-
-    cv:Canny( monoImage, monoImage, 10, 10);
-
-
-    QImage imageEdge((uchar*)monoImage.data, monoImage.cols, monoImage.rows, monoImage.step, QImage::Format_Grayscale8);
-    imageEdge = imageEdge.scaledToWidth(ui->PgraphicsView->width());
-    QGraphicsScene* sceneEdge = new QGraphicsScene();
-    sceneEdge->addPixmap(QPixmap::fromImage(imageEdge));
-
-    ui->PgraphicsViewEdge->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->PgraphicsViewEdge->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->PgraphicsViewEdge->setScene(sceneEdge);
-    ui->PgraphicsViewEdge->show();
+    CUpdateButtonState();
 }
 
 MainWindow::~MainWindow()
@@ -559,6 +524,52 @@ void MainWindow::on_PpushButtonSelectFolder_clicked()
     PLoadDatabase(folderName);
 }
 
+void MainWindow::on_PpushButtonSaveFile_clicked()
+{
+    QString outputText = "";
+    QString outputFile=QCoreApplication::applicationDirPath()+"/Data.txt";
+
+   for(int k = 0; k < PicturePathList.count(); k++)
+   {
+      qDebug()<<"\nK = "<<QString::number(k)<<" / "<<QString::number(PicturePathList.count()-1);
+
+       QString currentImagePath = PicturePathList.at(k);
+       std::vector<float> fourierDescriptors=calculateFourierDescriptor(currentImagePath);
+       if(k==0)
+       {
+         outputText += ""+QString::number(fourierDescriptors.size());
+         for(int i = 0; i < (fourierDescriptors.size()); i++)
+         {
+           outputText += ", "+QString::number(i);
+         }
+       }
+       QStringList filenamePieces = currentImagePath.split( "/" );
+       QString currentObjectName = filenamePieces.value( filenamePieces.length() - 1 );
+       QStringList currentObjectNamePieces = currentObjectName.split( "_" );
+       QString currentClassFormatted ="";
+
+       if(currentObjectNamePieces.value( 0 ) == "acer"){ currentClassFormatted = "Acer "+currentObjectNamePieces.value( 1 );}
+       else if(currentObjectNamePieces.value( 0 ) == "quercus"){ currentClassFormatted = "Quercus "+currentObjectNamePieces.value( 1 );}
+       else{  currentClassFormatted = currentObjectNamePieces.value( 0 )+" "+currentObjectNamePieces.value( 1 ); }
+
+       if(currentObjectNamePieces.count()==4){ currentClassFormatted += " "+currentObjectNamePieces.value( 2 ); }
+       outputText += "\n"+currentClassFormatted;
+
+       for(int i=0; i< fourierDescriptors.size(); i++)
+       {
+           outputText += ","+ QString::number(fourierDescriptors.at(i));
+       }
+
+   }
+   QFile fileOutput(outputFile);
+  if (fileOutput.open(QIODevice::ReadWrite)) {
+      QTextStream stream(&fileOutput);
+      stream << outputText << endl;
+  }
+
+      std::cout<<"\nFile was writen!!!"<< std::endl << std::flush;
+}
+
 void MainWindow::on_CpushButtonOpenFile_clicked()
 {
     database.clearObjects();
@@ -688,17 +699,119 @@ void MainWindow::PLoadDatabase(QString folderName)
 {
  //   cv::Mat imgOriginal;
 
-    QDirIterator it(folderName, QDir::Dirs | QDir::NoDotAndDotDot);
-    while (it.hasNext())
-    {
-       QString path = it.next();
-       qDebug() << path;
+    PicturePathList.clear();
 
-       QDirIterator fileIt(path, QStringList() << "*.jpg", QDir::Files);
-       while (fileIt.hasNext())
-       {
+        QDirIterator it(folderName, QDir::Dirs | QDir::NoDotAndDotDot);
+        while (it.hasNext())
+        {
+           QString path = it.next();
+           qDebug() << path;
 
-           qDebug() << fileIt.next();
-       }
-    }
+           QDirIterator fileIt(path, QStringList() << "*.jpg", QDir::Files);
+           while (fileIt.hasNext())
+           {
+               QString qs =fileIt.next();
+              // qs.replace("/","\\");
+
+              // std::string tempPath = qs.toLocal8Bit().constData();
+               qDebug() << qs;
+
+               PicturePathList.append(qs);
+           }
+        }
 }
+
+std::vector<float> MainWindow::calculateFourierDescriptor(QString imagePath)
+{
+    cv::Mat inputImage = cv::imread(std::string(imagePath.toLocal8Bit().constData()));
+    cv::Mat monoImage ;
+
+    cv::cvtColor(inputImage, monoImage, cv::COLOR_RGB2GRAY);
+
+    QImage image((uchar*)monoImage.data, monoImage.cols, monoImage.rows, monoImage.step, QImage::Format_Grayscale8);
+
+    image = image.scaledToWidth(ui->PgraphicsView->width());
+    QGraphicsScene* scene = new QGraphicsScene();
+    scene->addPixmap(QPixmap::fromImage(image));
+
+    ui->PgraphicsView->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PgraphicsView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PgraphicsView->setScene(scene);
+    ui->PgraphicsView->show();
+
+//Canny Edge Detector
+    cv:Canny(monoImage, monoImage, 10, 10);
+
+    QImage imageEdge((uchar*)monoImage.data, monoImage.cols, monoImage.rows, monoImage.step, QImage::Format_Grayscale8);
+   // imageEdge = imageEdge.scaledToWidth(ui->PgraphicsView->width());
+
+    // pic 2 - crawedzi
+    QGraphicsScene* sceneEdge = new QGraphicsScene();
+    sceneEdge->addPixmap(QPixmap::fromImage(imageEdge));
+
+    ui->PgraphicsViewEdge->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PgraphicsViewEdge->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PgraphicsViewEdge->setScene(sceneEdge);
+    ui->PgraphicsViewEdge->show();
+
+    QList<QList<int>> xyElemIndexes;
+    int width = imageEdge.width();
+    int height = imageEdge.height();
+
+    for(int x = 0; x < width; x++)
+    {
+      for(int y = 0; y < height; y++)
+      {
+          QList<int> temp;
+        if(qGray(imageEdge.pixel(x,y)) == 255)
+        {
+            temp.append(x);
+            temp.append(y);
+
+            xyElemIndexes.append(temp);
+        }
+
+      }
+    }
+    while(xyElemIndexes.count()>64)
+    {
+        int randNumberToRemove = rand() % xyElemIndexes.count();
+        xyElemIndexes.removeAt(randNumberToRemove);
+    }
+
+    cv::Mat planes[] = {cv::Mat_<float>(monoImage), cv::Mat::zeros(monoImage.size(), CV_32F)};
+    cv::Mat complexImg;
+    cv::merge(planes, 2, complexImg);
+    cv::dft(complexImg, complexImg); // Count DFT
+
+    cv::split(complexImg, planes);
+    cv::magnitude(planes[0], planes[1], planes[0]);
+    cv::Mat mag = planes[0];
+
+    cv::log(mag, mag);
+
+    mag = mag(cv::Rect(0, 0, mag.cols & -2, mag.rows & -2));
+
+    cv::normalize(mag, mag, 0, 1, CV_MINMAX);
+
+    std::vector<float> dftVector;
+    float temp =0;
+    std::cout<<"\nmag.rows = "<<mag.rows<<", mag.col "<<mag.cols<<std::endl << std::flush;
+
+    for(int i=0; i< xyElemIndexes.count();i++)
+    {
+        QList<int> tempInt = xyElemIndexes.at(i);
+        temp = mag.at<float>(tempInt.at(1), tempInt.at(0));
+        //std::cout<<"Here 13 = "<< temp << std::endl << std::flush;
+       //selectedDFT.append(temp);
+        dftVector.push_back(temp);
+    }
+    return dftVector;
+
+}
+
+
+
+
+
+

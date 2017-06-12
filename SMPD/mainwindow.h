@@ -45,6 +45,7 @@ private:
     int determinant_sign(const boost::numeric::ublas::permutation_matrix<std::size_t>& pm);
     double determinant(boost::numeric::ublas::matrix<float>& m);
     void PLoadDatabase(QString folderName);
+    std::vector<float> calculateFourierDescriptor(QString imagePath);
 
 private slots:
     void on_FSpushButtonOpenFile_clicked();
@@ -55,6 +56,7 @@ private slots:
 
     void on_PpushButtonSelectFolder_clicked();
 
+    void on_PpushButtonSaveFile_clicked();
 
     void on_CpushButtonOpenFile_clicked();
 
@@ -71,6 +73,7 @@ private:
      Database database;
      QString fileFolder="";
      QString imageFolder="";
+     QList<QString> PicturePathList;
 };
 
 #endif // MAINWINDOW_H
